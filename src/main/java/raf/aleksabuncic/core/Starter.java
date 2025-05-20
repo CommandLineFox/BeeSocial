@@ -4,19 +4,24 @@ import raf.aleksabuncic.cli.CliHandler;
 import raf.aleksabuncic.config.ConfigHandler;
 import raf.aleksabuncic.types.Node;
 
-import java.util.Scanner;
-
 public class Starter {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        if (args.length < 1) {
+            System.out.println("Usage: java -jar BeeSocial.jar <nodeId>");
+            return;
+        }
 
-        System.out.print("Enter node ID to start: ");
-        int nodeId = scanner.nextInt();
-        scanner.nextLine();
+        int nodeId;
+        try {
+            nodeId = Integer.parseInt(args[0]);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid node ID: " + args[0]);
+            return;
+        }
 
         Node node = ConfigHandler.loadNodeById("config.json", nodeId);
         if (node == null) {
-            System.out.println("Node with ID " + nodeId + " not found.");
+            System.out.println("Node with ID " + nodeId + " not found in config.");
             return;
         }
 
