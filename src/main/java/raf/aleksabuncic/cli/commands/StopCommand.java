@@ -16,7 +16,6 @@ public class StopCommand extends Command {
 
     @Override
     public void execute(String[] args) {
-        System.out.println("Shutting down node...");
-        System.exit(0);
+        runtime.shutdown();
     }
 }

@@ -11,8 +11,10 @@ public class CommandRegistry {
 
     public CommandRegistry(NodeRuntime runtime) {
         register(new AcceptCommand(runtime));
+        register(new BackupCommand(runtime));
         register(new FollowCommand(runtime));
         register(new ListFilesCommand(runtime));
+        register(new PingCommand(runtime));
         register(new RemoveFileCommand(runtime));
         register(new StopCommand(runtime));
         register(new UploadCommand(runtime));
@@ -20,10 +22,21 @@ public class CommandRegistry {
         register(new HelpCommand(commands));
     }
 
+    /**
+     * Registers a command in the registry.
+     *
+     * @param command Command to register.
+     */
     private void register(Command command) {
         commands.put(command.name(), command);
     }
 
+    /**
+     * Returns a command by its name.
+     *
+     * @param name Name of the command to retrieve.
+     * @return Command or null if not found.
+     */
     public Command get(String name) {
         return commands.get(name);
     }

@@ -7,9 +7,11 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import java.util.Scanner;
 
 public class CliHandler implements Runnable {
+    private final NodeRuntime runtime;
     private final CommandRegistry registry;
 
     public CliHandler(NodeRuntime runtime) {
+        this.runtime = runtime;
         this.registry = new CommandRegistry(runtime);
     }
 
@@ -17,11 +19,10 @@ public class CliHandler implements Runnable {
     public void run() {
         Scanner scanner = new Scanner(System.in);
 
-        while (true) {
+        while (runtime.isRunning()) {
+            if (!scanner.hasNextLine()) break;
             String line = scanner.nextLine().trim();
-            if (line.isEmpty()) {
-                continue;
-            }
+            if (line.isEmpty()) continue;
 
             String[] tokens = line.split("\\s+");
             String cmdName = tokens[0];
@@ -35,5 +36,7 @@ public class CliHandler implements Runnable {
                 System.out.println("Unknown command: " + cmdName);
             }
         }
+
+        System.out.println("CLI shut down.");
     }
 }
