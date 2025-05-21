@@ -2,13 +2,10 @@ package raf.aleksabuncic.core.runtime;
 
 import lombok.Getter;
 import raf.aleksabuncic.core.net.ConnectionHandler;
-import raf.aleksabuncic.core.net.Sender;
+import raf.aleksabuncic.core.response.ResponseRegistry;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Node;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,19 +13,27 @@ import java.util.concurrent.ConcurrentHashMap;
 @Getter
 public class NodeRuntime {
     private final Node nodeModel;
+    private final Set<Integer> followers;
+    private final Set<Integer> pendingRequests;
 
-    private final Set<Integer> followers = new HashSet<>();
-    private final Set<Integer> pendingRequests = new HashSet<>();
+    private String buddyIp;
+    private int buddyPort;
 
-    private String buddyIp = null;
-    private int buddyPort = -1;
+    private volatile boolean running;
 
-    private volatile boolean running = true;
+    private final ResponseRegistry responseRegistry;
+    private final Set<Integer> recentBackupResponses;
 
-    private final Set<Integer> recentBackupResponses = ConcurrentHashMap.newKeySet();
 
     public NodeRuntime(Node nodeModel) {
         this.nodeModel = nodeModel;
+        this.followers = new HashSet<>();
+        this.pendingRequests = ConcurrentHashMap.newKeySet();
+        this.buddyIp = null;
+        this.buddyPort = -1;
+        this.running = true;
+        this.responseRegistry = new ResponseRegistry(this);
+        this.recentBackupResponses = ConcurrentHashMap.newKeySet();
     }
 
     /**
@@ -52,93 +57,9 @@ public class NodeRuntime {
      * @param msg The message to handle
      */
     public void handleMessage(Message msg) {
-        int senderId = msg.senderId();
-
-        switch (msg.type()) {
-            case "FOLLOW" -> {
-                System.out.println("Received FOLLOW from Node " + senderId);
-                pendingRequests.add(senderId);
-            }
-
-            case "ACCEPT" -> {
-                System.out.println("Received ACCEPT from Node " + senderId);
-                followers.add(senderId);
-            }
-
-            case "LIST_FILES" -> {
-                System.out.println("Received LIST_FILES from Node " + senderId);
-
-                boolean allowed = nodeModel.getVisibility() == raf.aleksabuncic.types.NodeVisibility.PUBLIC ||
-                        followers.contains(senderId);
-
-                if (!allowed) {
-                    System.out.println("Access denied to Node " + senderId);
-                    return;
-                }
-
-                var files = raf.aleksabuncic.util.FileUtils.listFilesInDirectory(nodeModel.getImagePath());
-                String content = String.join(",", files);
-                Message response = new Message("FILES_LIST", nodeModel.getListenPort(), content);
-
-                raf.aleksabuncic.core.net.Sender.sendMessage("127.0.0.1", senderId, response);
-                System.out.println("Sent FILES_LIST to Node " + senderId);
-            }
-
-            case "FILES_LIST" -> {
-                System.out.println("Received FILES_LIST from Node " + senderId);
-                String[] files = msg.content().split(",");
-                if (files.length == 0 || (files.length == 1 && files[0].isEmpty())) {
-                    System.out.println("Remote node has no files.");
-                } else {
-                    System.out.println("Files on remote node " + senderId + ":");
-                    for (String f : files) {
-                        System.out.println(" - " + f);
-                    }
-                }
-            }
-
-            case "PING" -> {
-                System.out.println("Received PING from Node " + senderId);
-                Message pong = new Message("PONG", nodeModel.getListenPort(), "");
-                raf.aleksabuncic.core.net.Sender.sendMessage("127.0.0.1", senderId, pong);
-            }
-
-            case "PONG" -> System.out.println("Received PONG from Node " + senderId);
-
-            case "BACKUP_REQUEST" -> {
-                int requesterPort = msg.senderId();
-                System.out.println("Received BACKUP_REQUEST from Node " + requesterPort);
-                Message response = new Message("BACKUP_RESPONSE", nodeModel.getListenPort(), "");
-                Sender.sendMessage("127.0.0.1", requesterPort, response);
-            }
-
-            case "BACKUP_RESPONSE" -> {
-                System.out.println("Received BACKUP_RESPONSE from Node " + senderId);
-                markBackupResponded(senderId);
-            }
-
-            case "BACKUP" -> {
-                String[] parts = msg.content().split("::", 2);
-                if (parts.length != 2) {
-                    System.out.println("Invalid BACKUP message received.");
-                    return;
-                }
-
-                String filename = parts[0];
-                String base64Content = parts[1];
-
-                try {
-                    byte[] content = Base64.getDecoder().decode(base64Content);
-                    String savePath = nodeModel.getImagePath() + File.separator + filename;
-                    Files.write(new File(savePath).toPath(), content);
-
-                    System.out.println("Received backup file \"" + filename + "\" from Node " + msg.senderId());
-                } catch (Exception e) {
-                    System.out.println("Failed to write backup file: " + e.getMessage());
-                }
-            }
-
-            default -> System.out.println("Unknown message type: " + msg.type());
+        boolean handled = responseRegistry.handle(msg);
+        if (!handled) {
+            System.out.println("Unknown message type: " + msg.type());
         }
     }
 
@@ -193,6 +114,6 @@ public class NodeRuntime {
      * @return True if a response has been received, false if not.
      */
     public boolean hasRecentBackupResponse(int port) {
-        return recentBackupResponses.remove(port); // remove da ne ostaje u memoriji
+        return recentBackupResponses.remove(port);
     }
 }
