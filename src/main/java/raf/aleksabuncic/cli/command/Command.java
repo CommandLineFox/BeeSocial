@@ -9,6 +9,11 @@ public abstract class Command {
         this.runtime = runtime;
     }
 
+    /**
+     * Returns the name of the command.
+     *
+     * @return Name of the command.
+     */
     public abstract String name();
 
     /**

@@ -1,6 +1,7 @@
 package raf.aleksabuncic.core.runtime;
 
 import lombok.Getter;
+import raf.aleksabuncic.core.failure.FailureDetector;
 import raf.aleksabuncic.core.net.ConnectionHandler;
 import raf.aleksabuncic.core.response.ResponseRegistry;
 import raf.aleksabuncic.types.Message;
@@ -24,6 +25,7 @@ public class NodeRuntime {
     private final ResponseRegistry responseRegistry;
     private final Set<Integer> recentBackupResponses;
 
+    private FailureDetector failureDetector;
 
     public NodeRuntime(Node nodeModel) {
         this.nodeModel = nodeModel;
@@ -34,6 +36,7 @@ public class NodeRuntime {
         this.running = true;
         this.responseRegistry = new ResponseRegistry(this);
         this.recentBackupResponses = ConcurrentHashMap.newKeySet();
+        this.failureDetector = new FailureDetector(this);
     }
 
     /**
@@ -41,6 +44,7 @@ public class NodeRuntime {
      */
     public void start() {
         new Thread(new ConnectionHandler(this, nodeModel.getListenPort())).start();
+        new Thread(failureDetector).start();
     }
 
     /**
