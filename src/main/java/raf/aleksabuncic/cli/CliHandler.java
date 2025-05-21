@@ -1,41 +1,38 @@
 package raf.aleksabuncic.cli;
 
-import raf.aleksabuncic.types.Node;
+import raf.aleksabuncic.cli.command.Command;
+import raf.aleksabuncic.cli.command.CommandRegistry;
+import raf.aleksabuncic.core.runtime.NodeRuntime;
 
 import java.util.Scanner;
 
 public class CliHandler implements Runnable {
-    private final Node node;
+    private final CommandRegistry registry;
 
-    public CliHandler(Node node) {
-        this.node = node;
+    public CliHandler(NodeRuntime runtime) {
+        this.registry = new CommandRegistry(runtime);
     }
 
     @Override
     public void run() {
         Scanner scanner = new Scanner(System.in);
+
         while (true) {
-            System.out.print("> ");
             String line = scanner.nextLine().trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+
             String[] tokens = line.split("\\s+");
+            String cmdName = tokens[0];
+            String[] args = new String[tokens.length - 1];
+            System.arraycopy(tokens, 1, args, 0, args.length);
 
-            if (tokens.length == 0) continue;
-
-            switch (tokens[0]) {
-                case "stop":
-                    System.out.println("Shutdown not implemented yet");
-                    return;
-
-                case "visibility":
-                    System.out.println("Current visibility: " + node.getVisibility());
-                    break;
-
-                case "follow":
-                    System.out.println("Follow not implemented yet.");
-                    break;
-
-                default:
-                    System.out.println("Unknown command: " + tokens[0]);
+            Command command = registry.get(cmdName);
+            if (command != null) {
+                command.execute(args);
+            } else {
+                System.out.println("Unknown command: " + cmdName);
             }
         }
     }

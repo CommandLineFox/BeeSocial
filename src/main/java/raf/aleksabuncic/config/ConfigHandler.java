@@ -76,7 +76,6 @@ public class ConfigHandler {
      * @return Node.
      */
     private static Node loadEntry(JsonNode nodeEntry) {
-        int id = nodeEntry.get("id").asInt();
         short listenPort = (short) nodeEntry.get("listenPort").asInt();
         String bootstrapIp = nodeEntry.get("bootstrapIp").asText();
         short bootstrapPort = (short) nodeEntry.get("bootstrapPort").asInt();
@@ -84,6 +83,6 @@ public class ConfigHandler {
         int weakThreshold = nodeEntry.get("weakThreshold").asInt();
         int strongThreshold = nodeEntry.get("strongThreshold").asInt();
 
-        return new Node(id, listenPort, bootstrapIp, bootstrapPort, imagePath, weakThreshold, strongThreshold);
+        return new Node(listenPort, bootstrapIp, bootstrapPort, imagePath, weakThreshold, strongThreshold);
     }
 }

@@ -8,7 +8,6 @@ import java.util.List;
 
 @Getter
 public class Node {
-    private final int id;
     private final short listenPort;
     private final String bootstrapIp;
     private final short bootstrapPort;
@@ -19,8 +18,7 @@ public class Node {
     @Setter
     private NodeVisibility visibility;
 
-    public Node(int id, short listenPort, String bootstrapIp, short bootstrapPort, String imagePath, int weakThreshold, int strongThreshold) {
-        this.id = id;
+    public Node(short listenPort, String bootstrapIp, short bootstrapPort, String imagePath, int weakThreshold, int strongThreshold) {
         this.listenPort = listenPort;
         this.bootstrapIp = bootstrapIp;
         this.bootstrapPort = bootstrapPort;

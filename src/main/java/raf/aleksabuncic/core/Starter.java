@@ -2,6 +2,7 @@ package raf.aleksabuncic.core;
 
 import raf.aleksabuncic.cli.CliHandler;
 import raf.aleksabuncic.config.ConfigHandler;
+import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Node;
 
 public class Starter {
@@ -27,6 +28,9 @@ public class Starter {
 
         System.out.println("Node started on port " + node.getListenPort());
 
-        new Thread(new CliHandler(node)).start();
+        NodeRuntime runtime = new NodeRuntime(node);
+        runtime.start();
+
+        new Thread(new CliHandler(runtime)).start();
     }
 }
