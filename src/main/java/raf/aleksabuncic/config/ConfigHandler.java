@@ -33,7 +33,7 @@ public class ConfigHandler {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error when loading all nodes");
         }
 
         return nodes;
@@ -63,7 +63,7 @@ public class ConfigHandler {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error when loading node from config");
         }
 
         return null;

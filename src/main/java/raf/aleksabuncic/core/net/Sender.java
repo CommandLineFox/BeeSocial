@@ -19,7 +19,6 @@ public class Sender {
             out.flush();
         } catch (Exception e) {
             System.err.println("Failed to send message to " + host + ":" + port);
-            e.printStackTrace();
         }
     }
 }

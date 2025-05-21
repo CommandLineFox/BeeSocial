@@ -6,6 +6,9 @@ import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Node;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +32,7 @@ public class NodeRuntime {
     }
 
     /**
-     * Starts the node and it's ability to listen to incoming messages
+     * Starts the node, and it's ability to listen to incoming messages
      */
     public void start() {
         new Thread(new ConnectionHandler(this, nodeModel.getListenPort())).start();
@@ -114,6 +117,26 @@ public class NodeRuntime {
                 markBackupResponded(senderId);
             }
 
+            case "BACKUP" -> {
+                String[] parts = msg.content().split("::", 2);
+                if (parts.length != 2) {
+                    System.out.println("Invalid BACKUP message received.");
+                    return;
+                }
+
+                String filename = parts[0];
+                String base64Content = parts[1];
+
+                try {
+                    byte[] content = Base64.getDecoder().decode(base64Content);
+                    String savePath = nodeModel.getImagePath() + File.separator + filename;
+                    Files.write(new File(savePath).toPath(), content);
+
+                    System.out.println("Received backup file \"" + filename + "\" from Node " + msg.senderId());
+                } catch (Exception e) {
+                    System.out.println("Failed to write backup file: " + e.getMessage());
+                }
+            }
 
             default -> System.out.println("Unknown message type: " + msg.type());
         }

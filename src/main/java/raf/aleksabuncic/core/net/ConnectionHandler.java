@@ -26,7 +26,6 @@ public class ConnectionHandler implements Runnable {
             }
         } catch (Exception e) {
             System.err.println("[Node " + port + "] Server error:");
-            e.printStackTrace();
         }
     }
 
@@ -40,7 +39,7 @@ public class ConnectionHandler implements Runnable {
             Message msg = (Message) in.readObject();
             node.handleMessage(msg);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error during handling message.");
         }
     }
 }
