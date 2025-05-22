@@ -12,10 +12,13 @@ public class CommandRegistry {
     public CommandRegistry(NodeRuntime runtime) {
         register(new AcceptCommand(runtime));
         register(new BackupCommand(runtime));
+        register(new DownloadCommand(runtime));
         register(new FollowCommand(runtime));
         register(new ListFilesCommand(runtime));
         register(new PingCommand(runtime));
+        register(new ListBackupsCommand(runtime));
         register(new RemoveFileCommand(runtime));
+        register(new RestoreFromBackupCommand(runtime));
         register(new StopCommand(runtime));
         register(new UploadCommand(runtime));
         register(new VisibilityCommand(runtime));

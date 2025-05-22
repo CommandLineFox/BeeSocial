@@ -66,4 +66,16 @@ public class FileUtils {
     public static boolean checkIfMediaFile(String localPath) {
         return (localPath.endsWith(".jpg") || localPath.endsWith(".jpeg") || localPath.endsWith(".png") || localPath.endsWith(".gif") || localPath.endsWith(".bmp") || localPath.endsWith(".mp4") || localPath.endsWith(".mov") || localPath.endsWith(".avi") || localPath.endsWith(".webm") || localPath.endsWith(".mkv"));
     }
+
+
+    /**
+     * Extracts an original file from backup
+     *
+     * @param backupName Backup name to extract
+     * @return Extracted file name or the original name if no underscore is found.
+     */
+    public static String extractOriginalFileName(String backupName) {
+        int idx = backupName.indexOf('_');
+        return (idx == -1) ? backupName : backupName.substring(idx + 1);
+    }
 }

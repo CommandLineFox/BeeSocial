@@ -3,9 +3,11 @@ package raf.aleksabuncic.core.runtime;
 import lombok.Getter;
 import raf.aleksabuncic.core.failure.FailureDetector;
 import raf.aleksabuncic.core.net.ConnectionHandler;
+import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.response.ResponseRegistry;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Node;
+import raf.aleksabuncic.types.Peer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -25,7 +27,15 @@ public class NodeRuntime {
     private final ResponseRegistry responseRegistry;
     private final Set<Integer> recentBackupResponses;
 
-    private FailureDetector failureDetector;
+    /**
+     * Failure detector
+     */
+    private final FailureDetector failureDetector;
+
+    /**
+     * Known nodes to communicate with
+     */
+    private final Set<Peer> knownPeers = ConcurrentHashMap.newKeySet();
 
     public NodeRuntime(Node nodeModel) {
         this.nodeModel = nodeModel;
@@ -45,6 +55,20 @@ public class NodeRuntime {
     public void start() {
         new Thread(new ConnectionHandler(this, nodeModel.getListenPort())).start();
         new Thread(failureDetector).start();
+        registerWithBootstrap();
+    }
+
+    /**
+     * Register with the bootstrap server
+     */
+    public void registerWithBootstrap() {
+        try {
+            String myPort = String.valueOf(nodeModel.getListenPort());
+            Message request = new Message("REGISTER_REQUEST", nodeModel.getListenPort(), myPort);
+            Sender.sendMessage(nodeModel.getBootstrapIp(), nodeModel.getBootstrapPort(), request);
+        } catch (Exception e) {
+            System.out.println("Failed to register with bootstrap server.");
+        }
     }
 
     /**
@@ -119,5 +143,16 @@ public class NodeRuntime {
      */
     public boolean hasRecentBackupResponse(int port) {
         return recentBackupResponses.remove(port);
+    }
+
+    /**
+     * Add a peer
+     *
+     * @param peer Peer to add
+     */
+    public void addPeer(Peer peer) {
+        if (peer.port() != nodeModel.getListenPort()) {
+            knownPeers.add(peer);
+        }
     }
 }

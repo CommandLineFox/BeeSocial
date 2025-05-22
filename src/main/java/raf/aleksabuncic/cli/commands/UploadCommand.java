@@ -33,7 +33,6 @@ public class UploadCommand extends Command {
             return;
         }
 
-        // 1. Sačuvaj lokalno
         boolean success = FileUtils.uploadToWorkingRoot(path, runtime.getNodeModel().getImagePath());
         if (success) {
             System.out.println("File uploaded to working root.");
@@ -42,7 +41,6 @@ public class UploadCommand extends Command {
             return;
         }
 
-        // 2. Pošalji kao BACKUP ako postoji buddy
         if (runtime.hasBuddy()) {
             try {
                 File file = new File(path);
@@ -56,7 +54,7 @@ public class UploadCommand extends Command {
                 Sender.sendMessage(runtime.getBuddyIp(), runtime.getBuddyPort(), backup);
                 System.out.println("Backup sent to " + runtime.getBuddyIp() + ":" + runtime.getBuddyPort());
             } catch (Exception e) {
-                System.out.println("⚠️ Failed to send backup: " + e.getMessage());
+                System.out.println("Failed to send backup: " + e.getMessage());
             }
         }
     }
