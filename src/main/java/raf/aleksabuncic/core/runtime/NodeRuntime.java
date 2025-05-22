@@ -9,8 +9,8 @@ import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Node;
 import raf.aleksabuncic.types.Peer;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.math.BigInteger;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
@@ -18,9 +18,6 @@ public class NodeRuntime {
     private final Node nodeModel;
     private final Set<Integer> followers;
     private final Set<Integer> pendingRequests;
-
-    private String buddyIp;
-    private int buddyPort;
 
     private volatile boolean running;
 
@@ -37,12 +34,25 @@ public class NodeRuntime {
      */
     private final Set<Peer> knownPeers = ConcurrentHashMap.newKeySet();
 
+    /**
+     * Chord successor node
+     */
+    private Peer successor;
+
+    /**
+     * Chord ID of the current successor
+     */
+    private String successorId;
+
+    /**
+     * Chord predecessor node (not yet used)
+     */
+    private Peer predecessor;
+
     public NodeRuntime(Node nodeModel) {
         this.nodeModel = nodeModel;
         this.followers = new HashSet<>();
         this.pendingRequests = ConcurrentHashMap.newKeySet();
-        this.buddyIp = null;
-        this.buddyPort = -1;
         this.running = true;
         this.responseRegistry = new ResponseRegistry(this);
         this.recentBackupResponses = ConcurrentHashMap.newKeySet();
@@ -50,7 +60,7 @@ public class NodeRuntime {
     }
 
     /**
-     * Starts the node, and it's ability to listen to incoming messages
+     * Starts the node, and its ability to listen to incoming messages
      */
     public void start() {
         new Thread(new ConnectionHandler(this, nodeModel.getListenPort())).start();
@@ -59,21 +69,37 @@ public class NodeRuntime {
     }
 
     /**
-     * Register with the bootstrap server
+     * Register with the bootstrap server and attempt to find successor in the ring
      */
     public void registerWithBootstrap() {
         try {
             String bootstrapIp = nodeModel.getBootstrapIp();
             int bootstrapPort = nodeModel.getBootstrapPort();
-
             String myPort = String.valueOf(nodeModel.getListenPort());
-            Message request = new Message("REGISTER_REQUEST", nodeModel.getListenPort(), myPort);
 
+            Message request = new Message("REGISTER_REQUEST", nodeModel.getListenPort(), myPort);
             Message response = Sender.sendMessageWithResponse(bootstrapIp, bootstrapPort, request);
 
             if (response != null && "REGISTER_RESPONSE".equals(response.type())) {
-                handleMessage(response); // ili responseRegistry.dispatch(response) ako koristiš
+                handleMessage(response);
                 System.out.println("Successfully registered with bootstrap server.");
+
+                for (Peer peer : knownPeers) {
+                    Peer succ = Sender.sendFindSuccessor(peer, nodeModel.getChordId());
+                    if (succ != null) {
+                        this.successor = succ;
+                        this.successorId = nodeModel.getChordId();
+                        System.out.println("Set successor to: " + succ);
+                        break;
+                    }
+                }
+
+                if (successor == null) {
+                    this.successor = new Peer("127.0.0.1", nodeModel.getListenPort());
+                    this.successorId = nodeModel.getChordId();
+                    System.out.println("No peers found. Acting as own successor.");
+                }
+
             } else {
                 System.err.println("Did not receive valid response from bootstrap.");
             }
@@ -92,7 +118,7 @@ public class NodeRuntime {
     }
 
     /**
-     * Handle an incoming message from another node
+     * Handles incoming messages and dispatches them to the correct response handler.
      *
      * @param msg The message to handle
      */
@@ -104,61 +130,43 @@ public class NodeRuntime {
     }
 
     /**
-     * Accepts a follow request
+     * Finds the successor of a given Chord ID in the ring.
      *
-     * @param senderId ID of the sender
-     * @return True if accepted, false if not
+     * @param targetId Chord ID to resolve
+     * @return Peer that is responsible for the target ID
      */
-    public boolean acceptFollow(int senderId) {
-        if (pendingRequests.remove(senderId)) {
-            followers.add(senderId);
-            return true;
+    public Peer findSuccessor(String targetId) {
+        String myId = nodeModel.getChordId();
+
+        if (successor == null || successorId == null || isBetween(myId, targetId, successorId)) {
+            return successor != null ? successor : new Peer("127.0.0.1", nodeModel.getListenPort());
+        } else {
+            return Sender.sendFindSuccessor(successor, targetId);
         }
-        return false;
     }
 
     /**
-     * Sets the buddy of this node.
+     * Checks whether target lies between start and end (clockwise).
      *
-     * @param ip   IP address of the buddy node. Can be null to remove the buddy.
-     * @param port Port of the buddy node. Can be -1 to remove the buddy.
+     * @param start  Starting ID
+     * @param target Target ID
+     * @param end    Ending ID
+     * @return True if target is between start and end
      */
-    public void setBuddy(String ip, int port) {
-        this.buddyIp = ip;
-        this.buddyPort = port;
-        System.out.println("Buddy set to " + ip + ":" + port);
+    private boolean isBetween(String start, String target, String end) {
+        BigInteger s = new BigInteger(start, 16);
+        BigInteger t = new BigInteger(target, 16);
+        BigInteger e = new BigInteger(end, 16);
+
+        if (s.compareTo(e) < 0) {
+            return t.compareTo(s) > 0 && t.compareTo(e) <= 0;
+        } else {
+            return t.compareTo(s) > 0 || t.compareTo(e) <= 0;
+        }
     }
 
     /**
-     * Checks if this node has a buddy.
-     *
-     * @return True if it has a buddy, false if not.
-     */
-    public boolean hasBuddy() {
-        return buddyIp != null && buddyPort != -1;
-    }
-
-    /**
-     * Marks a backup response as received.
-     *
-     * @param port Port of the backup node that responded.
-     */
-    public void markBackupResponded(int port) {
-        recentBackupResponses.add(port);
-    }
-
-    /**
-     * Checks if a backup response has been received from a specific node.
-     *
-     * @param port Port of the backup node to check.
-     * @return True if a response has been received, false if not.
-     */
-    public boolean hasRecentBackupResponse(int port) {
-        return recentBackupResponses.remove(port);
-    }
-
-    /**
-     * Add a peer
+     * Adds a peer to the known peer set (excluding self)
      *
      * @param peer Peer to add
      */

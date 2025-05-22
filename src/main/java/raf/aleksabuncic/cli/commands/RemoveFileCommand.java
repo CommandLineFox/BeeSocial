@@ -22,7 +22,7 @@ public class RemoveFileCommand extends Command {
             return;
         }
 
-        File file = new File(runtime.getNodeModel().getImagePath(), args[0]);
+        File file = new File(runtime.getNodeModel().getWorkPath(), args[0]);
         if (file.exists() && file.isFile()) {
             if (file.delete()) {
                 System.out.println("File removed.");

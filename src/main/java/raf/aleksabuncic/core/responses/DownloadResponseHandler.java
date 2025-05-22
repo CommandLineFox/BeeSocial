@@ -29,7 +29,7 @@ public class DownloadResponseHandler extends ResponseHandler {
         String filename = parts[0];
         byte[] content = Base64.getDecoder().decode(parts[1]);
 
-        String downloadDir = runtime.getNodeModel().getImagePath() + File.separator + "downloads";
+        String downloadDir = runtime.getNodeModel().getWorkPath() + File.separator + "downloads";
         File outFile = new File(downloadDir, filename);
 
         try {

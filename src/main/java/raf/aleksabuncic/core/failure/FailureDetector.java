@@ -67,8 +67,8 @@ public class FailureDetector implements Runnable {
      * Restores all files from the backup folder to the main folder.
      */
     private void restoreFromBackup() {
-        String backupDir = runtime.getNodeModel().getImagePath() + File.separator + "backup";
-        String mainDir = runtime.getNodeModel().getImagePath();
+        String backupDir = runtime.getNodeModel().getWorkPath() + File.separator + "backup";
+        String mainDir = runtime.getNodeModel().getWorkPath() + File.separator + "uploads";
 
         File folder = new File(backupDir);
         File[] files = folder.listFiles();

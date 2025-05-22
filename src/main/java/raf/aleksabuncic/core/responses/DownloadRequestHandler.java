@@ -23,7 +23,7 @@ public class DownloadRequestHandler extends ResponseHandler {
     public void handle(Message msg) {
         String filename = msg.content();
 
-        File file = new File(runtime.getNodeModel().getImagePath() + File.separator + "uploads", filename);
+        File file = new File(runtime.getNodeModel().getWorkPath() + File.separator + "uploads", filename);
 
         if (!file.exists() || !file.isFile()) {
             System.out.println("File " + filename + " not found in uploads/ for download.");

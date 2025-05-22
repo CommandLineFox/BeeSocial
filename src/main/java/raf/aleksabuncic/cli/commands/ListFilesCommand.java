@@ -19,7 +19,7 @@ public class ListFilesCommand extends Command {
     public void execute(String[] args) {
         int myId = runtime.getNodeModel().getListenPort();
         if (args.length == 0) {
-            var files = FileUtils.listFilesInDirectory(runtime.getNodeModel().getImagePath());
+            var files = FileUtils.listFilesInDirectory(runtime.getNodeModel().getWorkPath());
             if (files.isEmpty()) {
                 System.out.println("No files found.");
             } else {

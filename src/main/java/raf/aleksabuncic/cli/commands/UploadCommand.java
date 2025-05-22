@@ -29,7 +29,7 @@ public class UploadCommand extends Command {
 
         String relativePath = args[0];
 
-        File sourceFile = new File(runtime.getNodeModel().getImagePath(), relativePath);
+        File sourceFile = new File(runtime.getNodeModel().getWorkPath(), relativePath);
 
         if (!sourceFile.exists()) {
             System.out.println("File not found: " + sourceFile.getAbsolutePath());
@@ -41,7 +41,7 @@ public class UploadCommand extends Command {
             return;
         }
 
-        File uploadsDir = new File(runtime.getNodeModel().getImagePath(), "uploads");
+        File uploadsDir = new File(runtime.getNodeModel().getWorkPath(), "uploads");
         if (!uploadsDir.exists()) {
             uploadsDir.mkdirs();
         }

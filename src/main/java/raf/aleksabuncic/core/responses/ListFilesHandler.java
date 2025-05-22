@@ -31,7 +31,7 @@ public class ListFilesHandler extends ResponseHandler {
             return;
         }
 
-        String uploadsPath = runtime.getNodeModel().getImagePath() + File.separator + "uploads";
+        String uploadsPath = runtime.getNodeModel().getWorkPath() + File.separator + "uploads";
         var files = FileUtils.listFilesInDirectory(uploadsPath);
         String content = String.join(",", files);
 

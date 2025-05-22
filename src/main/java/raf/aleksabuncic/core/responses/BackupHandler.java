@@ -31,7 +31,7 @@ public class BackupHandler extends ResponseHandler {
 
         try {
             byte[] content = Base64.getDecoder().decode(base64Content);
-            String backupFolder = runtime.getNodeModel().getImagePath() + File.separator + "backup";
+            String backupFolder = runtime.getNodeModel().getWorkPath() + File.separator + "backup";
             String savePath = backupFolder + File.separator + msg.senderId() + "_" + filename;
 
             File saveFile = new File(savePath);

@@ -17,7 +17,7 @@ public class ListDownloadsCommand extends Command {
 
     @Override
     public void execute(String[] args) {
-        String downloadDir = runtime.getNodeModel().getImagePath() + File.separator + "downloads";
+        String downloadDir = runtime.getNodeModel().getWorkPath() + File.separator + "downloads";
         File folder = new File(downloadDir);
         File[] files = folder.listFiles();
 
