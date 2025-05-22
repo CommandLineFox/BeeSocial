@@ -17,6 +17,7 @@ public class CommandRegistry {
         register(new ListFilesCommand(runtime));
         register(new PingCommand(runtime));
         register(new ListBackupsCommand(runtime));
+        register(new ListDownloadsCommand(runtime));
         register(new RemoveFileCommand(runtime));
         register(new RestoreFromBackupCommand(runtime));
         register(new StopCommand(runtime));

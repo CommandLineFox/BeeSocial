@@ -6,7 +6,6 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 
 public class PingCommand extends Command {
-
     public PingCommand(NodeRuntime runtime) {
         super(runtime);
     }

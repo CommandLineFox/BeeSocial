@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import static raf.aleksabuncic.util.FileUtils.extractOriginalFileName;
 
 public class RestoreFromBackupCommand extends Command {
-
     public RestoreFromBackupCommand(NodeRuntime runtime) {
         super(runtime);
     }

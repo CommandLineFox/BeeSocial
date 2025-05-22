@@ -6,7 +6,6 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import java.io.File;
 
 public class ListDownloadsCommand extends Command {
-
     public ListDownloadsCommand(NodeRuntime runtime) {
         super(runtime);
     }

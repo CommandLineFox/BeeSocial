@@ -23,35 +23,47 @@ public class UploadCommand extends Command {
     @Override
     public void execute(String[] args) {
         if (args.length != 1) {
-            System.out.println("Usage: upload <path>");
+            System.out.println("Usage: upload <relativePathFromImagePath>");
             return;
         }
 
-        String path = args[0];
-        if (!FileUtils.checkIfMediaFile(path)) {
+        String relativePath = args[0];
+
+        File sourceFile = new File(runtime.getNodeModel().getImagePath(), relativePath);
+
+        if (!sourceFile.exists()) {
+            System.out.println("File not found: " + sourceFile.getAbsolutePath());
+            return;
+        }
+
+        if (!FileUtils.checkIfMediaFile(sourceFile.getName())) {
             System.out.println("Unsupported file type.");
             return;
         }
 
-        boolean success = FileUtils.uploadToWorkingRoot(path, runtime.getNodeModel().getImagePath());
-        if (success) {
-            System.out.println("File uploaded to working root.");
-        } else {
-            System.out.println("Failed to upload locally.");
+        File uploadsDir = new File(runtime.getNodeModel().getImagePath(), "uploads");
+        if (!uploadsDir.exists()) {
+            uploadsDir.mkdirs();
+        }
+
+        File destFile = new File(uploadsDir, sourceFile.getName());
+        try {
+            Files.copy(sourceFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("File uploaded to uploads folder.");
+        } catch (Exception e) {
+            System.out.println("Failed to upload file: " + e.getMessage());
             return;
         }
 
         if (runtime.hasBuddy()) {
             try {
-                File file = new File(path);
-                byte[] content = Files.readAllBytes(file.toPath());
+                byte[] content = Files.readAllBytes(sourceFile.toPath());
                 String encoded = Base64.getEncoder().encodeToString(content);
-                String filename = file.getName();
+                String messageContent = sourceFile.getName() + "::" + encoded;
 
-                String messageContent = filename + "::" + encoded;
                 Message backup = new Message("BACKUP", runtime.getNodeModel().getListenPort(), messageContent);
-
                 Sender.sendMessage(runtime.getBuddyIp(), runtime.getBuddyPort(), backup);
+
                 System.out.println("Backup sent to " + runtime.getBuddyIp() + ":" + runtime.getBuddyPort());
             } catch (Exception e) {
                 System.out.println("Failed to send backup: " + e.getMessage());

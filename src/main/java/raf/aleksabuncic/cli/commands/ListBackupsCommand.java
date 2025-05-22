@@ -6,7 +6,6 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import java.io.File;
 
 public class ListBackupsCommand extends Command {
-
     public ListBackupsCommand(NodeRuntime runtime) {
         super(runtime);
     }

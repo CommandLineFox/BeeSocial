@@ -4,7 +4,6 @@ import raf.aleksabuncic.cli.command.Command;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 
 public class StopCommand extends Command {
-
     public StopCommand(NodeRuntime runtime) {
         super(runtime);
     }

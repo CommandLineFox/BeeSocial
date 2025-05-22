@@ -7,6 +7,8 @@ import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.NodeVisibility;
 import raf.aleksabuncic.util.FileUtils;
 
+import java.io.File;
+
 public class ListFilesHandler extends ResponseHandler {
     public ListFilesHandler(NodeRuntime runtime) {
         super(runtime);
@@ -29,10 +31,11 @@ public class ListFilesHandler extends ResponseHandler {
             return;
         }
 
-        var files = FileUtils.listFilesInDirectory(runtime.getNodeModel().getImagePath());
+        String uploadsPath = runtime.getNodeModel().getImagePath() + File.separator + "uploads";
+        var files = FileUtils.listFilesInDirectory(uploadsPath);
         String content = String.join(",", files);
-        Message response = new Message("LIST_FILES_RESPONSE", runtime.getNodeModel().getListenPort(), content);
 
+        Message response = new Message("LIST_FILES_RESPONSE", runtime.getNodeModel().getListenPort(), content);
         Sender.sendMessage("127.0.0.1", msg.senderId(), response);
         System.out.println("Sent LIST_FILES_RESPONSE to Node " + msg.senderId());
     }

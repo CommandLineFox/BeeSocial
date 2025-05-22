@@ -6,7 +6,6 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 
 public class BackupCommand extends Command {
-
     public BackupCommand(NodeRuntime runtime) {
         super(runtime);
     }

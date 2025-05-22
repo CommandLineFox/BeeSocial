@@ -15,11 +15,14 @@ public class ResponseRegistry {
         register(new BackupHandler(runtime));
         register(new BackupRequestHandler(runtime));
         register(new BackupResponseHandler(runtime));
+        register(new DownloadRequestHandler(runtime));
+        register(new DownloadResponseHandler(runtime));
         register(new FollowHandler(runtime));
         register(new ListFilesHandler(runtime));
         register(new ListFilesResponseHandler(runtime));
         register(new PingHandler(runtime));
         register(new PongHandler(runtime));
+        register(new RegisterResponseHandler(runtime));
     }
 
     /**

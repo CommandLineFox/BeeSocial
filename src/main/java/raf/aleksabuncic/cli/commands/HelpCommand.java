@@ -5,7 +5,6 @@ import raf.aleksabuncic.cli.command.Command;
 import java.util.Map;
 
 public class HelpCommand extends Command {
-
     private final Map<String, Command> commandMap;
 
     public HelpCommand(Map<String, Command> commandMap) {
