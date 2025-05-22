@@ -5,6 +5,8 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Peer;
 
+import java.util.Arrays;
+
 public class RegisterResponseHandler extends ResponseHandler {
     public RegisterResponseHandler(NodeRuntime runtime) {
         super(runtime);
@@ -17,23 +19,24 @@ public class RegisterResponseHandler extends ResponseHandler {
 
     @Override
     public void handle(Message msg) {
-        if (msg.content().isBlank()) {
-            System.out.println("Bootstrap: no other nodes to connect to.");
+        if (msg.content() == null || msg.content().isBlank()) {
+            System.out.println("Bootstrap server returned no peers.");
             return;
         }
 
-        String[] entries = msg.content().split(",");
-        for (String entry : entries) {
-            String[] parts = entry.split(":");
+        String[] peerStrings = msg.content().split(",");
+        for (String p : peerStrings) {
+            String[] parts = p.split(":");
             if (parts.length != 2) continue;
 
             String ip = parts[0];
             int port = Integer.parseInt(parts[1]);
 
-            Peer peer = new Peer(ip, port);
-            runtime.addPeer(peer);
+            if (port == runtime.getNodeModel().getListenPort()) continue;
+
+            runtime.addPeer(new Peer(ip, port));
         }
 
-        System.out.println("Registered peers: " + runtime.getKnownPeers());
+        System.out.println("Received peers from bootstrap: " + Arrays.toString(peerStrings));
     }
 }

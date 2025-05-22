@@ -1,4 +1,4 @@
-package raf.aleksabuncic.core;
+package raf.aleksabuncic.starter;
 
 import raf.aleksabuncic.cli.CliHandler;
 import raf.aleksabuncic.config.ConfigHandler;

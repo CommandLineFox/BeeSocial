@@ -63,11 +63,23 @@ public class NodeRuntime {
      */
     public void registerWithBootstrap() {
         try {
+            String bootstrapIp = nodeModel.getBootstrapIp();
+            int bootstrapPort = nodeModel.getBootstrapPort();
+
             String myPort = String.valueOf(nodeModel.getListenPort());
             Message request = new Message("REGISTER_REQUEST", nodeModel.getListenPort(), myPort);
-            Sender.sendMessage(nodeModel.getBootstrapIp(), nodeModel.getBootstrapPort(), request);
+
+            Message response = Sender.sendMessageWithResponse(bootstrapIp, bootstrapPort, request);
+
+            if (response != null && "REGISTER_RESPONSE".equals(response.type())) {
+                handleMessage(response); // ili responseRegistry.dispatch(response) ako koristiš
+                System.out.println("Successfully registered with bootstrap server.");
+            } else {
+                System.err.println("Did not receive valid response from bootstrap.");
+            }
+
         } catch (Exception e) {
-            System.out.println("Failed to register with bootstrap server.");
+            System.err.println("Failed to register with bootstrap server: " + e.getMessage());
         }
     }
 

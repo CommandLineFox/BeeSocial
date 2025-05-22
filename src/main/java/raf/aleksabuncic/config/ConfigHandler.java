@@ -2,6 +2,7 @@ package raf.aleksabuncic.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import raf.aleksabuncic.types.BootstrapConfig;
 import raf.aleksabuncic.types.Node;
 
 import java.io.InputStream;
@@ -84,5 +85,34 @@ public class ConfigHandler {
         int strongThreshold = nodeEntry.get("strongThreshold").asInt();
 
         return new Node(listenPort, bootstrapIp, bootstrapPort, imagePath, weakThreshold, strongThreshold);
+    }
+
+    /**
+     * Returns the bootstrap configuration from the given resource path.
+     *
+     * @param resourcePath Path to the config file.
+     * @return Bootstrap configuration or null if not found.
+     */
+    public static BootstrapConfig loadBootstrapConfig(String resourcePath) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream is = ConfigHandler.class.getClassLoader().getResourceAsStream(resourcePath);
+
+            if (is == null) {
+                throw new IllegalArgumentException("Couldn't find config file: " + resourcePath);
+            }
+
+            JsonNode root = mapper.readTree(is);
+            JsonNode bootstrap = root.get("bootstrap");
+
+            String ip = bootstrap.get("ip").asText();
+            int port = bootstrap.get("port").asInt();
+
+            return new BootstrapConfig(ip, port);
+
+        } catch (Exception e) {
+            System.out.println("Error when loading bootstrap config");
+            return null;
+        }
     }
 }
