@@ -15,6 +15,7 @@ public class ResponseRegistry {
         register(new FindSuccessorHandler(runtime));
         register(new FindSuccessorResponseHandler(runtime));
         register(new FollowHandler(runtime));
+        register(new GetPredecessorHandler(runtime));
         register(new ListFilesHandler(runtime));
         register(new ListFilesResponseHandler(runtime));
         register(new NotifyHandler(runtime));

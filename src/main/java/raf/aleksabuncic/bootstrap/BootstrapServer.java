@@ -56,7 +56,7 @@ public class BootstrapServer implements Runnable {
 
                 String responseContent = registeredNodes.stream().filter(p -> !p.equals(newNode)).map(Peer::toString).reduce((a, b) -> a + "," + b).orElse("");
 
-                Message response = new Message("REGISTER_RESPONSE", port, responseContent);
+                Message response = new Message("REGISTER_RESPONSE", senderIp, port, responseContent);
                 out.writeObject(response);
                 out.flush();
             }

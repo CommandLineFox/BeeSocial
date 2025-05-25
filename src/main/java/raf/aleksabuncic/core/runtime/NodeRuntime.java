@@ -6,6 +6,7 @@ import raf.aleksabuncic.core.failure.FailureDetector;
 import raf.aleksabuncic.core.net.ConnectionHandler;
 import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.response.ResponseRegistry;
+import raf.aleksabuncic.core.stabilizer.Stabilizer;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Node;
 import raf.aleksabuncic.types.Peer;
@@ -53,6 +54,11 @@ public class NodeRuntime {
     private final FailureDetector failureDetector = new FailureDetector(this);
 
     /**
+     * Stabilizer thread that periodically checks for node stability and updates successor and predecessor if needed.
+     */
+    private final Stabilizer stabilizer = new Stabilizer(this);
+
+    /**
      * Known nodes to communicate with
      */
     private final Set<Peer> knownPeers = ConcurrentHashMap.newKeySet();
@@ -89,6 +95,8 @@ public class NodeRuntime {
     public void start() {
         new Thread(new ConnectionHandler(this, nodeModel.getListenPort())).start();
         new Thread(failureDetector).start();
+        new Thread(stabilizer).start();
+
         registerWithBootstrap();
     }
 
@@ -165,7 +173,8 @@ public class NodeRuntime {
      */
     public Peer findSuccessor(String targetId) {
         String myId = nodeModel.getChordId();
-
+        System.out.println("Looking for successor of ID: " + targetId);
+        System.out.println("My ID: " + myId + ", Successor ID: " + successorId);
         if (successor == null || successorId == null || isBetween(myId, targetId, successorId)) {
             return successor != null ? successor : new Peer("127.0.0.1", nodeModel.getListenPort());
         } else {
@@ -181,7 +190,7 @@ public class NodeRuntime {
      * @param end    Ending ID
      * @return True if the target is between start and end
      */
-    private boolean isBetween(String start, String target, String end) {
+    public boolean isBetween(String start, String target, String end) {
         BigInteger s = new BigInteger(start, 16);
         BigInteger t = new BigInteger(target, 16);
         BigInteger e = new BigInteger(end, 16);
@@ -271,7 +280,7 @@ public class NodeRuntime {
      * @param peer Peer object
      * @return Chord ID (SHA-1 hashed)
      */
-    private String hashPeer(Peer peer) {
+    public String hashPeer(Peer peer) {
         String input = peer.ip() + ":" + peer.port();
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
