@@ -5,6 +5,7 @@ import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 
+
 public class FollowCommand extends Command {
     public FollowCommand(NodeRuntime runtime) {
         super(runtime);
@@ -21,14 +22,22 @@ public class FollowCommand extends Command {
             System.out.println("Usage: follow <ip>:<port>");
             return;
         }
-        String[] addr = args[0].split(":");
-        String ip = addr[0];
-        int port = Integer.parseInt(addr[1]);
 
-        String myIp = runtime.getNodeModel().getListenIp();
-        int myPort = runtime.getNodeModel().getListenPort();
-        Message msg = new Message("FOLLOW", myIp, myPort, "");
-        Sender.sendMessage(ip, port, msg);
-        System.out.println("Sent FOLLOW to " + ip + ":" + port);
+        String[] parts = args[0].split(":");
+        String targetIp = parts[0];
+        int targetPort;
+        try {
+            targetPort = Integer.parseInt(parts[1]);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid port.");
+            return;
+        }
+
+        String localIp = runtime.getNodeModel().getListenIp();
+        int localPort = runtime.getNodeModel().getListenPort();
+        Message followRequest = new Message("FOLLOW_REQUEST", localIp, localPort, "");
+        Sender.sendMessage(targetIp, targetPort, followRequest);
+
+        System.out.println("Follow request sent to " + targetIp + ":" + targetPort);
     }
 }

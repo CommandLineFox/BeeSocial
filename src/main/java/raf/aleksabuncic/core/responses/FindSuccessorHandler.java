@@ -7,7 +7,6 @@ import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Peer;
 
 public class FindSuccessorHandler extends ResponseHandler {
-
     public FindSuccessorHandler(NodeRuntime runtime) {
         super(runtime);
     }
@@ -28,9 +27,13 @@ public class FindSuccessorHandler extends ResponseHandler {
         }
 
         String responseContent = successor.ip() + ":" + successor.port();
-        Message response = new Message("FIND_SUCCESSOR_RESPONSE", runtime.getNodeModel().getListenPort(), responseContent);
 
-        Sender.sendMessage(msg.senderId(), response);
+        String localIp = runtime.getNodeModel().getListenIp();
+        int localPort = runtime.getNodeModel().getListenPort();
+
+        Message response = new Message("FIND_SUCCESSOR_RESPONSE", localIp, localPort, responseContent);
+
+        Sender.sendMessage(msg.senderIp(), msg.senderPort(), response);
         System.out.println("Handled FIND_SUCCESSOR for ID " + targetId + " → " + successor);
     }
 }

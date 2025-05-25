@@ -22,15 +22,16 @@ public class RemoveFileCommand extends Command {
             return;
         }
 
-        File file = new File(runtime.getNodeModel().getWorkPath(), args[0]);
-        if (file.exists() && file.isFile()) {
-            if (file.delete()) {
-                System.out.println("File removed.");
-            } else {
-                System.out.println("Failed to remove file.");
-            }
+        File file = new File(runtime.getNodeModel().getWorkPath(), "uploads" + File.separator + args[0]);
+        if (!file.exists()) {
+            System.out.println("File not found: " + args[0]);
+            return;
+        }
+
+        if (file.delete()) {
+            System.out.println("File deleted: " + args[0]);
         } else {
-            System.out.println("File not found.");
+            System.out.println("Failed to delete file: " + args[0]);
         }
     }
 }

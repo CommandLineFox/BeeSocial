@@ -22,14 +22,14 @@ public class PingCommand extends Command {
             return;
         }
 
-        String[] addr = args[0].split(":");
-        String ip = addr[0];
-        int port = Integer.parseInt(addr[1]);
+        String[] parts = args[0].split(":");
+        String targetIp = parts[0];
+        int targetPort = Integer.parseInt(parts[1]);
 
-        int senderId = runtime.getNodeModel().getListenPort();
-        Message ping = new Message("PING", senderId, "");
-        Sender.sendMessage(ip, port, ping);
+        String localIp = runtime.getNodeModel().getListenIp();
+        int localPort = runtime.getNodeModel().getListenPort();
 
-        System.out.println("Sent PING to " + ip + ":" + port);
+        Message ping = new Message("PING", localIp, localPort, "");
+        Sender.sendMessage(targetIp, targetPort, ping);
     }
 }

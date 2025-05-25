@@ -198,7 +198,10 @@ public class NodeRuntime {
      */
     public void notifySuccessor() {
         if (successor != null) {
-            Message notifyMsg = new Message("NOTIFY", nodeModel.getListenPort(), nodeModel.getChordId());
+            String localIp = nodeModel.getListenIp();
+            int localPort = nodeModel.getListenPort();
+
+            Message notifyMsg = new Message("NOTIFY", localIp, localPort, nodeModel.getChordId());
             Sender.sendMessage(successor.ip(), successor.port(), notifyMsg);
         }
     }

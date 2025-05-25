@@ -20,14 +20,13 @@ public class ListFilesHandler extends ResponseHandler {
     }
 
     @Override
-    public void handle(Message msg) {
-        System.out.println("Received LIST_FILES from Node " + msg.senderId());
+    public void handle(Message message) {
+        System.out.println("Received LIST_FILES from Node " + message.senderPort());
 
-        boolean allowed = runtime.getNodeModel().getVisibility() == NodeVisibility.PUBLIC ||
-                runtime.getFollowers().contains(msg.senderId());
+        boolean allowed = runtime.getNodeModel().getVisibility() == NodeVisibility.PUBLIC || runtime.getFollowers().contains(message.senderPort());
 
         if (!allowed) {
-            System.out.println("Access denied to Node " + msg.senderId());
+            System.out.println("Access denied to Node " + message.senderPort());
             return;
         }
 
@@ -35,8 +34,9 @@ public class ListFilesHandler extends ResponseHandler {
         var files = FileUtils.listFilesInDirectory(uploadsPath);
         String content = String.join(",", files);
 
-        Message response = new Message("LIST_FILES_RESPONSE", runtime.getNodeModel().getListenPort(), content);
-        Sender.sendMessage("127.0.0.1", msg.senderId(), response);
-        System.out.println("Sent LIST_FILES_RESPONSE to Node " + msg.senderId());
+        Message response = new Message("LIST_FILES_RESPONSE", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), content);
+
+        Sender.sendMessage(message.senderIp(), message.senderPort(), response);
+        System.out.println("Sent LIST_FILES_RESPONSE to Node " + message.senderPort());
     }
 }

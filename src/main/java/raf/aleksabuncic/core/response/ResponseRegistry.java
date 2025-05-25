@@ -12,11 +12,8 @@ public class ResponseRegistry {
 
     public ResponseRegistry(NodeRuntime runtime) {
         register(new AcceptHandler(runtime));
-        register(new BackupHandler(runtime));
-        register(new BackupRequestHandler(runtime));
-        register(new BackupResponseHandler(runtime));
-        register(new DownloadRequestHandler(runtime));
-        register(new DownloadResponseHandler(runtime));
+        register(new FindSuccessorHandler(runtime));
+        register(new FindSuccessorResponseHandler(runtime));
         register(new FollowHandler(runtime));
         register(new ListFilesHandler(runtime));
         register(new ListFilesResponseHandler(runtime));

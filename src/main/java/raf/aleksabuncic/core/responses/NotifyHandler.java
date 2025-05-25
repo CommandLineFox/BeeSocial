@@ -16,12 +16,8 @@ public class NotifyHandler extends ResponseHandler {
     }
 
     @Override
-    public void handle(Message msg) {
-        String senderIp = msg.senderId() != -1 ? "127.0.0.1" : "unknown";
-        int senderPort = msg.senderId();
-        String senderId = msg.content();
-
-        Peer potentialPredecessor = new Peer(senderIp, senderPort);
-        runtime.considerNewPredecessor(potentialPredecessor, senderId);
+    public void handle(Message message) {
+        Peer potentialPredecessor = new Peer(message.senderIp(), message.senderPort());
+        runtime.considerNewPredecessor(potentialPredecessor, message.content());
     }
 }

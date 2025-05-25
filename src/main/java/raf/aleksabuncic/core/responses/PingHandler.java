@@ -16,9 +16,13 @@ public class PingHandler extends ResponseHandler {
     }
 
     @Override
-    public void handle(Message msg) {
-        System.out.println("Received PING from Node " + msg.senderId());
-        Message pong = new Message("PONG", runtime.getNodeModel().getListenPort(), "");
-        Sender.sendMessage("127.0.0.1", msg.senderId(), pong);
+    public void handle(Message message) {
+        System.out.println("Received PING from Node " + message.senderPort());
+
+        String localIp = runtime.getNodeModel().getListenIp();
+        int localPort = runtime.getNodeModel().getListenPort();
+
+        Message pong = new Message("PONG", localIp, localPort, "");
+        Sender.sendMessage(message.senderIp(), message.senderPort(), pong);
     }
 }

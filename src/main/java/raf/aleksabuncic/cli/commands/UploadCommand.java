@@ -4,6 +4,7 @@ import raf.aleksabuncic.cli.command.Command;
 import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
+import raf.aleksabuncic.types.Peer;
 import raf.aleksabuncic.util.FileUtils;
 
 import java.io.File;
@@ -28,7 +29,6 @@ public class UploadCommand extends Command {
         }
 
         String relativePath = args[0];
-
         File sourceFile = new File(runtime.getNodeModel().getWorkPath(), relativePath);
 
         if (!sourceFile.exists()) {
@@ -55,16 +55,19 @@ public class UploadCommand extends Command {
             return;
         }
 
-        if (runtime.getSuccessor() != null && runtime.getSuccessor().port() != runtime.getNodeModel().getListenPort()) {
+        Peer successor = runtime.getSuccessor();
+        if (successor != null && successor.port() != runtime.getNodeModel().getListenPort()) {
             try {
                 byte[] content = Files.readAllBytes(sourceFile.toPath());
                 String encoded = Base64.getEncoder().encodeToString(content);
                 String messageContent = sourceFile.getName() + "::" + encoded;
 
-                Message backup = new Message("BACKUP", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), messageContent);
-                Sender.sendMessage(runtime.getSuccessor().ip(), runtime.getSuccessor().port(), backup);
+                String localIp = runtime.getNodeModel().getListenIp();
+                int localPort = runtime.getNodeModel().getListenPort();
+                Message backup = new Message("BACKUP", localIp, localPort, messageContent);
 
-                System.out.println("Backup sent to successor: " + runtime.getSuccessor());
+                Sender.sendMessage(successor.ip(), successor.port(), backup);
+                System.out.println("Backup sent to successor: " + successor);
             } catch (Exception e) {
                 System.out.println("Failed to send backup: " + e.getMessage());
             }

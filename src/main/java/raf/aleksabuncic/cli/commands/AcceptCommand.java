@@ -18,19 +18,20 @@ public class AcceptCommand extends Command {
     @Override
     public void execute(String[] args) {
         if (args.length != 1) {
-            System.out.println("Usage: accept <senderId>");
+            System.out.println("Usage: accept <senderPort>");
             return;
         }
-        int senderId = Integer.parseInt(args[0]);
-        if (runtime.acceptFollow(senderId)) {
-            String myIp = runtime.getNodeModel().getListenIp();
-            int myPort = runtime.getNodeModel().getListenPort();
 
-            Message msg = new Message("ACCEPT", myIp, myPort, "");
-            Sender.sendMessage("127.0.0.1", senderId, msg);
-            System.out.println("Accepted request from Node " + senderId);
+        int senderPort = Integer.parseInt(args[0]);
+        if (runtime.acceptFollow(senderPort)) {
+            String localIp = runtime.getNodeModel().getListenIp();
+            int localPort = runtime.getNodeModel().getListenPort();
+
+            Message msg = new Message("ACCEPT", localIp, localPort, "");
+            Sender.sendMessage("127.0.0.1", senderPort, msg);
+            System.out.println("Accepted request from Node on port " + senderPort);
         } else {
-            System.out.println("No pending request from Node " + senderId);
+            System.out.println("No pending request from Node " + senderPort);
         }
     }
 }

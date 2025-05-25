@@ -16,7 +16,7 @@ public class AcceptHandler extends ResponseHandler {
 
     @Override
     public void handle(Message msg) {
-        System.out.println("Received ACCEPT from Node " + msg.senderId());
-        runtime.getFollowers().add(msg.senderId());
+        System.out.println("Received ACCEPT from Node " + msg.senderPort());
+        runtime.getFollowers().add(msg.senderPort());
     }
 }
