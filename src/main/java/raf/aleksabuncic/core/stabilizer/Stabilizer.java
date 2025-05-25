@@ -22,27 +22,9 @@ public class Stabilizer implements Runnable {
                     continue;
                 }
 
-                Message request = new Message("GET_PREDECESSOR",
-                        runtime.getNodeModel().getListenIp(),
-                        runtime.getNodeModel().getListenPort(),
-                        "");
-                Message response = Sender.sendMessageWithResponse(successor.ip(), successor.port(), request);
-
-                if (response != null && "PREDECESSOR_INFO".equals(response.type())) {
-                    String[] parts = response.content().split(":");
-                    if (parts.length == 2) {
-                        Peer candidate = new Peer(parts[0], Integer.parseInt(parts[1]));
-                        String candidateId = runtime.hashPeer(candidate);
-
-                        String selfId = runtime.getNodeModel().getChordId();
-                        String succId = runtime.hashPeer(successor);
-
-                        if (runtime.isBetween(selfId, candidateId, succId)) {
-                            runtime.setSuccessor(candidate);
-                            System.out.println("Stabilizer: Updated successor to " + candidate);
-                        }
-                    }
-                }
+                Message request = new Message("GET_PREDECESSOR", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), "");
+                Sender.sendMessage(successor.ip(), successor.port(), request);
+                System.out.println("Stabilizer: Sent GET_PREDECESSOR to " + successor);
 
                 runtime.notifySuccessor();
 

@@ -35,16 +35,22 @@ public class Sender {
      */
     public static Message sendMessageWithResponse(String host, int port, Message message) {
         try (Socket socket = new Socket(host, port)) {
+            System.out.println("[SENDER] Connecting to " + host + ":" + port);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
+            System.out.println("[SENDER] Sending message type: " + message.type());
             out.writeObject(message);
             out.flush();
 
-            return (Message) in.readObject();
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+
+            Message response = (Message) in.readObject();
+            System.out.println("[SENDER] Received response: " + (response != null ? response.type() : "null"));
+
+            return response;
         } catch (Exception e) {
-            System.err.println("Failed to send message to " + host + ":" + port);
+            System.err.println("[SENDER] Failed to send message to " + host + ":" + port + " → " + e.getMessage());
             return null;
         }
     }
@@ -58,29 +64,8 @@ public class Sender {
      * @param senderPort Port of the sender node.
      * @return Successor Peer or null.
      */
-    public static Peer sendFindSuccessor(Peer targetPeer, String targetId, String senderIp, int senderPort) {
+    public static void sendFindSuccessor(Peer targetPeer, String targetId, String senderIp, int senderPort) {
         Message request = new Message("FIND_SUCCESSOR", senderIp, senderPort, targetId);
-        Message response = sendMessageWithResponse(targetPeer.ip(), targetPeer.port(), request);
-
-        if (response != null && "FIND_SUCCESSOR_RESPONSE".equals(response.type())) {
-            String[] parts = response.content().split(":");
-            if (parts.length == 2) {
-                String ip = parts[0];
-                int port = Integer.parseInt(parts[1]);
-                return new Peer(ip, port);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Sends a FIND_SUCCESSOR message with default sender info.
-     *
-     * @param targetPeer Peer to ask.
-     * @param targetId   Chord ID to resolve.
-     * @return Successor Peer or null.
-     */
-    public static Peer sendFindSuccessor(Peer targetPeer, String targetId) {
-        return sendFindSuccessor(targetPeer, targetId, "127.0.0.1", -1);
+        sendMessage(targetPeer.ip(), targetPeer.port(), request);
     }
 }

@@ -72,6 +72,7 @@ public class NodeRuntime {
     /**
      * Chord ID of the current successor
      */
+    @Setter
     private String successorId;
 
     /**
@@ -96,6 +97,11 @@ public class NodeRuntime {
         new Thread(new ConnectionHandler(this, nodeModel.getListenPort())).start();
         new Thread(failureDetector).start();
         new Thread(stabilizer).start();
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ignored) {
+        }
 
         registerWithBootstrap();
     }
@@ -129,31 +135,26 @@ public class NodeRuntime {
             int bootstrapPort = nodeModel.getBootstrapPort();
 
             String myIp = nodeModel.getListenIp();
-            String myPort = String.valueOf(nodeModel.getListenPort());
+            int myPort = nodeModel.getListenPort();
 
-            Message request = new Message("REGISTER_REQUEST", myIp, Integer.parseInt(myPort), myPort);
+            Message request = new Message("REGISTER_REQUEST", myIp, myPort, String.valueOf(myPort));
             Message response = Sender.sendMessageWithResponse(bootstrapIp, bootstrapPort, request);
 
             if (response != null && "REGISTER_RESPONSE".equals(response.type())) {
                 handleMessage(response);
                 System.out.println("Successfully registered with bootstrap server.");
+                System.out.println("[DEBUG] knownPeers after bootstrap = " + knownPeers);
 
                 for (Peer peer : knownPeers) {
-                    Peer succ = Sender.sendFindSuccessor(peer, nodeModel.getChordId());
-                    if (succ != null) {
-                        this.successor = succ;
-                        this.successorId = hashPeer(succ);
-                        System.out.println("Set successor to: " + succ);
-                        break;
-                    }
+                    System.out.println("Requesting successor info from peer: " + peer);
+                    Sender.sendFindSuccessor(peer, nodeModel.getChordId(), myIp, myPort);
+                    break;
                 }
 
                 if (successor == null) {
-                    this.successor = new Peer("127.0.0.1", nodeModel.getListenPort());
+                    this.successor = new Peer(myIp, myPort);
                     this.successorId = nodeModel.getChordId();
                     System.out.println("No peers found. Acting as own successor.");
-                } else {
-                    notifySuccessor();
                 }
 
             } else {
@@ -175,10 +176,29 @@ public class NodeRuntime {
         String myId = nodeModel.getChordId();
         System.out.println("Looking for successor of ID: " + targetId);
         System.out.println("My ID: " + myId + ", Successor ID: " + successorId);
+
         if (successor == null || successorId == null || isBetween(myId, targetId, successorId)) {
-            return successor != null ? successor : new Peer("127.0.0.1", nodeModel.getListenPort());
+            return successor != null ? successor : new Peer(nodeModel.getListenIp(), nodeModel.getListenPort());
         } else {
-            return Sender.sendFindSuccessor(successor, targetId);
+            // WARNING: only use sync sendFindSuccessor here if it's acceptable
+            // Ideally this should be replaced with finger table logic or recursive logic
+            return successor;
+        }
+    }
+
+    /**
+     * Sends a FIND_SUCCESSOR message for the given target ID.
+     * The result will be processed asynchronously via the FIND_SUCCESSOR_RESPONSE handler.
+     *
+     * @param targetId Chord ID to resolve
+     */
+    public void requestSuccessor(String targetId) {
+        String myId = nodeModel.getChordId();
+        System.out.println("Requesting successor for ID: " + targetId);
+        System.out.println("My ID: " + myId + ", Successor ID: " + successorId);
+
+        if (successor != null && successorId != null && !isBetween(myId, targetId, successorId)) {
+            Sender.sendFindSuccessor(successor, targetId, nodeModel.getListenIp(), nodeModel.getListenPort());
         }
     }
 
@@ -234,6 +254,10 @@ public class NodeRuntime {
      * @param idOfPredecessor      ID of the sender
      */
     public void considerNewPredecessor(Peer potentialPredecessor, String idOfPredecessor) {
+        if (predecessor != null && predecessor.ip().equals(potentialPredecessor.ip()) && predecessor.port() == potentialPredecessor.port()) {
+            return;
+        }
+
         if (predecessor == null || isBetween(predecessorId, idOfPredecessor, nodeModel.getChordId())) {
             this.predecessor = potentialPredecessor;
             this.predecessorId = idOfPredecessor;
@@ -253,25 +277,6 @@ public class NodeRuntime {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Marks a backup response as received.
-     *
-     * @param port Port of the backup node that responded.
-     */
-    public void markBackupResponded(int port) {
-        recentBackupResponses.add(port);
-    }
-
-    /**
-     * Checks if a backup response has been received from a specific node.
-     *
-     * @param port Port of the backup node to check.
-     * @return True if a response has been received, false if not.
-     */
-    public boolean hasRecentBackupResponse(int port) {
-        return recentBackupResponses.remove(port);
     }
 
     /**

@@ -18,6 +18,7 @@ public class FindSuccessorHandler extends ResponseHandler {
 
     @Override
     public void handle(Message msg) {
+        System.out.println("Received FIND_SUCCESSOR for ID " + msg.content());
         String targetId = msg.content();
         Peer successor = runtime.findSuccessor(targetId);
 
@@ -28,10 +29,10 @@ public class FindSuccessorHandler extends ResponseHandler {
 
         String responseContent = successor.ip() + ":" + successor.port();
 
-        String localIp = runtime.getNodeModel().getListenIp();
-        int localPort = runtime.getNodeModel().getListenPort();
+        String thisNodeIp = runtime.getNodeModel().getListenIp();
+        int thisNodePort = runtime.getNodeModel().getListenPort();
 
-        Message response = new Message("FIND_SUCCESSOR_RESPONSE", localIp, localPort, responseContent);
+        Message response = new Message("FIND_SUCCESSOR_RESPONSE", thisNodeIp, thisNodePort, responseContent);
 
         Sender.sendMessage(msg.senderIp(), msg.senderPort(), response);
         System.out.println("Handled FIND_SUCCESSOR for ID " + targetId + " → " + successor);

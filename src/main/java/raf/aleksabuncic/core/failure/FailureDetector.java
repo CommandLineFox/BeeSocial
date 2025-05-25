@@ -29,7 +29,7 @@ public class FailureDetector implements Runnable {
             try {
                 Peer target = runtime.getSuccessor();
                 if (target == null || target.port() == runtime.getNodeModel().getListenPort()) {
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                     continue;
                 }
 
@@ -60,31 +60,20 @@ public class FailureDetector implements Runnable {
 
                 if (elapsed >= strong) {
                     System.out.println("Strong suspicion: Successor failed. Attempting recovery...");
+
                     restoreFromBackup();
 
-                    Peer newSuccessor = null;
                     for (Peer peer : runtime.getKnownPeers()) {
                         if (peer.port() == runtime.getNodeModel().getListenPort()) continue;
-                        Peer candidate = Sender.sendFindSuccessor(peer, runtime.getNodeModel().getChordId());
-                        if (candidate != null) {
-                            newSuccessor = candidate;
-                            break;
-                        }
-                    }
-
-                    if (newSuccessor != null) {
-                        runtime.setSuccessor(newSuccessor);
-                        System.out.println("Updated successor to: " + newSuccessor);
-                        runtime.notifySuccessor();
-                    } else {
-                        System.out.println("No valid successor found. Acting as own successor.");
-                        runtime.setSuccessor(new Peer("127.0.0.1", runtime.getNodeModel().getListenPort()));
+                        Sender.sendFindSuccessor(peer, runtime.getNodeModel().getChordId(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort());
+                        System.out.println("Trying to find replacement successor via peer: " + peer);
+                        break;
                     }
 
                     lastPongTime = System.currentTimeMillis();
                 }
 
-                Thread.sleep(500); // short pause before next PING
+                Thread.sleep(20000);
 
             } catch (Exception e) {
                 System.out.println("FailureDetector error: " + e.getMessage());
@@ -93,7 +82,8 @@ public class FailureDetector implements Runnable {
     }
 
     /**
-     * Notifies that a PONG message has been received.
+     * Notifies the failure detector that a PONG message has been received,
+     * resetting the timer and unblocking any waiting threads.
      */
     public void notifyPongReceived() {
         lock.lock();
@@ -106,7 +96,7 @@ public class FailureDetector implements Runnable {
     }
 
     /**
-     * Restores all files from the backup folder to the main folder.
+     * Restores all files from the backup folder to the working upload folder.
      */
     private void restoreFromBackup() {
         String backupDir = runtime.getNodeModel().getWorkPath() + File.separator + "backup";

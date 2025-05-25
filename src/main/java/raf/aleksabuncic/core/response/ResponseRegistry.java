@@ -21,6 +21,7 @@ public class ResponseRegistry {
         register(new NotifyHandler(runtime));
         register(new PingHandler(runtime));
         register(new PongHandler(runtime));
+        register(new PredecessorInfoHandler(runtime));
         register(new RegisterResponseHandler(runtime));
     }
 
