@@ -24,8 +24,10 @@ public class FollowCommand extends Command {
         String[] addr = args[0].split(":");
         String ip = addr[0];
         int port = Integer.parseInt(addr[1]);
-        int myId = runtime.getNodeModel().getListenPort();
-        Message msg = new Message("FOLLOW", myId, "");
+
+        String myIp = runtime.getNodeModel().getListenIp();
+        int myPort = runtime.getNodeModel().getListenPort();
+        Message msg = new Message("FOLLOW", myIp, myPort, "");
         Sender.sendMessage(ip, port, msg);
         System.out.println("Sent FOLLOW to " + ip + ":" + port);
     }

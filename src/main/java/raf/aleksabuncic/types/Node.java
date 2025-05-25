@@ -17,6 +17,10 @@ public class Node {
      */
     private final String chordId;
     /**
+     * Listening IP for incoming messages.
+     */
+    private final String listenIp;
+    /**
      * Port to listen on for messages
      */
     private final short listenPort;
@@ -49,6 +53,7 @@ public class Node {
 
     public Node(short listenPort, String bootstrapIp, short bootstrapPort, String workPath, int weakThreshold, int strongThreshold) {
         this.chordId = generateId("127.0.0.1", listenPort);
+        this.listenIp = "127.0.0.1";
         this.listenPort = listenPort;
         this.bootstrapIp = bootstrapIp;
         this.bootstrapPort = bootstrapPort;

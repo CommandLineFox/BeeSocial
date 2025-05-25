@@ -17,8 +17,12 @@ public class BackupRequestHandler extends ResponseHandler {
 
     @Override
     public void handle(Message msg) {
-        System.out.println("Received BACKUP_REQUEST from Node " + msg.senderId());
-        Message response = new Message("BACKUP_RESPONSE", runtime.getNodeModel().getListenPort(), "");
-        Sender.sendMessage("127.0.0.1", msg.senderId(), response);
+        System.out.println("Received BACKUP_REQUEST from Node " + msg.senderPort());
+
+        String myIp = runtime.getNodeModel().getListenIp();
+        int myPort = runtime.getNodeModel().getListenPort();
+
+        Message response = new Message("BACKUP_RESPONSE", myIp, myPort, "");
+        Sender.sendMessage(msg.senderIp(), msg.senderPort(), response);
     }
 }

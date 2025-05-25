@@ -23,7 +23,10 @@ public class AcceptCommand extends Command {
         }
         int senderId = Integer.parseInt(args[0]);
         if (runtime.acceptFollow(senderId)) {
-            Message msg = new Message("ACCEPT", runtime.getNodeModel().getListenPort(), "");
+            String myIp = runtime.getNodeModel().getListenIp();
+            int myPort = runtime.getNodeModel().getListenPort();
+
+            Message msg = new Message("ACCEPT", myIp, myPort, "");
             Sender.sendMessage("127.0.0.1", senderId, msg);
             System.out.println("Accepted request from Node " + senderId);
         } else {

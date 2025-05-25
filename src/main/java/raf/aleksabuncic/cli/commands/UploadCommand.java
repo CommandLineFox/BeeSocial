@@ -55,16 +55,16 @@ public class UploadCommand extends Command {
             return;
         }
 
-        if (runtime.hasBuddy()) {
+        if (runtime.getSuccessor() != null && runtime.getSuccessor().port() != runtime.getNodeModel().getListenPort()) {
             try {
                 byte[] content = Files.readAllBytes(sourceFile.toPath());
                 String encoded = Base64.getEncoder().encodeToString(content);
                 String messageContent = sourceFile.getName() + "::" + encoded;
 
-                Message backup = new Message("BACKUP", runtime.getNodeModel().getListenPort(), messageContent);
-                Sender.sendMessage(runtime.getBuddyIp(), runtime.getBuddyPort(), backup);
+                Message backup = new Message("BACKUP", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), messageContent);
+                Sender.sendMessage(runtime.getSuccessor().ip(), runtime.getSuccessor().port(), backup);
 
-                System.out.println("Backup sent to " + runtime.getBuddyIp() + ":" + runtime.getBuddyPort());
+                System.out.println("Backup sent to successor: " + runtime.getSuccessor());
             } catch (Exception e) {
                 System.out.println("Failed to send backup: " + e.getMessage());
             }

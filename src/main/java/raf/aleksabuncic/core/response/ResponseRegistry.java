@@ -20,6 +20,7 @@ public class ResponseRegistry {
         register(new FollowHandler(runtime));
         register(new ListFilesHandler(runtime));
         register(new ListFilesResponseHandler(runtime));
+        register(new NotifyHandler(runtime));
         register(new PingHandler(runtime));
         register(new PongHandler(runtime));
         register(new RegisterResponseHandler(runtime));

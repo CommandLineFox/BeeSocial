@@ -3,15 +3,21 @@ package raf.aleksabuncic.core.failure;
 import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
+import raf.aleksabuncic.types.Peer;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static raf.aleksabuncic.util.FileUtils.extractOriginalFileName;
 
 public class FailureDetector implements Runnable {
     private final NodeRuntime runtime;
     private long lastPongTime = System.currentTimeMillis();
+    private final Lock lock = new ReentrantLock();
+    private final Condition pongReceived = lock.newCondition();
 
     public FailureDetector(NodeRuntime runtime) {
         this.runtime = runtime;
@@ -21,16 +27,26 @@ public class FailureDetector implements Runnable {
     public void run() {
         while (runtime.isRunning()) {
             try {
-                if (!runtime.hasBuddy()) {
+                Peer target = runtime.getSuccessor();
+                if (target == null || target.port() == runtime.getNodeModel().getListenPort()) {
                     Thread.sleep(1000);
                     continue;
                 }
 
-                Message ping = new Message("PING", runtime.getNodeModel().getListenPort(), "");
-                Sender.sendMessage(runtime.getBuddyIp(), runtime.getBuddyPort(), ping);
-                System.out.println("Sent PING to buddy");
+                String myIp = runtime.getNodeModel().getListenIp();
+                int myPort = runtime.getNodeModel().getListenPort();
 
-                Thread.sleep(1000);
+                Message ping = new Message("PING", myIp, myPort, "");
+                Sender.sendMessage(target.ip(), target.port(), ping);
+                System.out.println("Sent PING to successor " + target);
+
+                lock.lock();
+                try {
+                    int timeout = runtime.getNodeModel().getStrongThreshold();
+                    pongReceived.awaitNanos(timeout * 1_000_000L);
+                } finally {
+                    lock.unlock();
+                }
 
                 long now = System.currentTimeMillis();
                 long elapsed = now - lastPongTime;
@@ -39,16 +55,36 @@ public class FailureDetector implements Runnable {
                 int strong = runtime.getNodeModel().getStrongThreshold();
 
                 if (elapsed >= weak && elapsed < strong) {
-                    System.out.println("Weak suspicion: Buddy may be unresponsive.");
+                    System.out.println("Weak suspicion: Successor may be unresponsive.");
                 }
 
                 if (elapsed >= strong) {
-                    System.out.println("Strong suspicion: Buddy failed. Restoring from backup...");
+                    System.out.println("Strong suspicion: Successor failed. Attempting recovery...");
                     restoreFromBackup();
+
+                    Peer newSuccessor = null;
+                    for (Peer peer : runtime.getKnownPeers()) {
+                        if (peer.port() == runtime.getNodeModel().getListenPort()) continue;
+                        Peer candidate = Sender.sendFindSuccessor(peer, runtime.getNodeModel().getChordId());
+                        if (candidate != null) {
+                            newSuccessor = candidate;
+                            break;
+                        }
+                    }
+
+                    if (newSuccessor != null) {
+                        runtime.setSuccessor(newSuccessor);
+                        System.out.println("Updated successor to: " + newSuccessor);
+                        runtime.notifySuccessor();
+                    } else {
+                        System.out.println("No valid successor found. Acting as own successor.");
+                        runtime.setSuccessor(new Peer("127.0.0.1", runtime.getNodeModel().getListenPort()));
+                    }
+
                     lastPongTime = System.currentTimeMillis();
                 }
 
-                Thread.sleep(2000);
+                Thread.sleep(500); // short pause before next PING
 
             } catch (Exception e) {
                 System.out.println("FailureDetector error: " + e.getMessage());
@@ -60,7 +96,13 @@ public class FailureDetector implements Runnable {
      * Notifies that a PONG message has been received.
      */
     public void notifyPongReceived() {
-        lastPongTime = System.currentTimeMillis();
+        lock.lock();
+        try {
+            lastPongTime = System.currentTimeMillis();
+            pongReceived.signalAll();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**

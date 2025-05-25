@@ -49,14 +49,15 @@ public class Sender {
     }
 
     /**
-     * Sends a message to a remote node and waits for a response.
+     * Sends a FIND_SUCCESSOR message and waits for a response.
      *
-     * @param peer     Peer to send the message to.
-     * @param targetId ID of the file to find a successor for.
-     * @return Peer of the successor or null if failed to send or receive a response.
+     * @param peer     Target peer.
+     * @param targetId ID for which to find the successor.
+     * @param senderId ID of the sender (usually this node's listen port).
+     * @return Successor Peer or null.
      */
-    public static Peer sendFindSuccessor(Peer peer, String targetId) {
-        Message request = new Message("FIND_SUCCESSOR", -1, targetId); // -1 jer nemamo ID, možeš dodati ako treba
+    public static Peer sendFindSuccessor(Peer peer, String targetId, int senderId) {
+        Message request = new Message("FIND_SUCCESSOR", senderId, targetId);
         Message response = sendMessageWithResponse(peer.ip(), peer.port(), request);
 
         if (response != null && "FIND_SUCCESSOR_RESPONSE".equals(response.type())) {
@@ -69,5 +70,12 @@ public class Sender {
         }
 
         return null;
+    }
+
+    /**
+     * Overload for compatibility, assumes -1 as senderId.
+     */
+    public static Peer sendFindSuccessor(Peer peer, String targetId) {
+        return sendFindSuccessor(peer, targetId, -1);
     }
 }

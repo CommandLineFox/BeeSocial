@@ -32,7 +32,10 @@ public class BackupCommand extends Command {
             return;
         }
 
-        Message req = new Message("BACKUP_REQUEST", runtime.getNodeModel().getListenPort(), "");
+        String myIp = runtime.getNodeModel().getListenIp();
+        int myPort = runtime.getNodeModel().getListenPort();
+
+        Message req = new Message("BACKUP_REQUEST", myIp, myPort, "");
         Sender.sendMessage(ip, port, req);
 
         try {
