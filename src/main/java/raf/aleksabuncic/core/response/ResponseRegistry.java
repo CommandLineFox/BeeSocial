@@ -23,6 +23,9 @@ public class ResponseRegistry {
         register(new PongHandler(runtime));
         register(new PredecessorInfoHandler(runtime));
         register(new RegisterResponseHandler(runtime));
+        register(new UpdatePredecessorHandler(runtime));
+        register(new UpdateSuccessorHandler(runtime));
+        register(new UploadTransferHandler(runtime));
     }
 
     /**

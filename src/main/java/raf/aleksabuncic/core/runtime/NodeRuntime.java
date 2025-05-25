@@ -11,8 +11,12 @@ import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Node;
 import raf.aleksabuncic.types.Peer;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.security.MessageDigest;
+import java.util.Base64;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -84,6 +88,7 @@ public class NodeRuntime {
     /**
      * Chord ID of the current predecessor
      */
+    @Setter
     private String predecessorId;
 
     public NodeRuntime(Node nodeModel) {
@@ -294,5 +299,65 @@ public class NodeRuntime {
         } catch (Exception e) {
             throw new RuntimeException("Hashing failed: " + e.getMessage());
         }
+    }
+
+    /**
+     * Sends all files from this node's uploads directory to the given peer.
+     * Files are encoded as Base64 strings and sent via UPLOAD_TRANSFER messages.
+     *
+     * @param target Peer to receive the files.
+     */
+    public void sendAllFilesTo(Peer target) {
+        String uploadPath = nodeModel.getWorkPath() + File.separator + "uploads";
+        File uploadDir = new File(uploadPath);
+        File[] files = uploadDir.listFiles();
+
+        if (files == null || files.length == 0) {
+            System.out.println("No files to transfer.");
+            return;
+        }
+
+        for (File file : files) {
+            try {
+                byte[] data = Files.readAllBytes(file.toPath());
+                String encoded = Base64.getEncoder().encodeToString(data);
+                String fileName = file.getName();
+
+                String content = fileName + "::" + encoded;
+
+                Message transfer = new Message("UPLOAD_TRANSFER", nodeModel.getListenIp(), nodeModel.getListenPort(), content);
+
+                Sender.sendMessage(target.ip(), target.port(), transfer);
+                System.out.println("Transferred file: " + fileName + " to " + target);
+
+            } catch (IOException e) {
+                System.err.println("Failed to send file: " + file.getName() + " → " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Gracefully leaves the Chord ring by:
+     * 1. Notifying a predecessor to update its successor reference.
+     * 2. Notifying successor to update its predecessor reference.
+     * 3. Transferring all owned files to the successor.
+     * 4. Calling shutdown to stop the node.
+     */
+    public void leaveChordRing() {
+        System.out.println("Leaving Chord ring...");
+
+        if (predecessor != null && successor != null && !successor.equals(predecessor)) {
+            Message updateSucc = new Message("UPDATE_SUCCESSOR", nodeModel.getListenIp(), nodeModel.getListenPort(), successor.ip() + ":" + successor.port());
+            Sender.sendMessage(predecessor.ip(), predecessor.port(), updateSucc);
+        }
+
+        if (successor != null && predecessor != null && !successor.equals(predecessor)) {
+            Message updatePred = new Message("UPDATE_PREDECESSOR", nodeModel.getListenIp(), nodeModel.getListenPort(), predecessor.ip() + ":" + predecessor.port());
+            Sender.sendMessage(successor.ip(), successor.port(), updatePred);
+        }
+
+        sendAllFilesTo(successor);
+
+        shutdown();
     }
 }

@@ -15,6 +15,6 @@ public class StopCommand extends Command {
 
     @Override
     public void execute(String[] args) {
-        runtime.shutdown();
+        runtime.leaveChordRing();
     }
 }
