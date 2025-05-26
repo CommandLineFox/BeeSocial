@@ -11,16 +11,15 @@ import raf.aleksabuncic.core.process.Stabilizer;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Node;
 import raf.aleksabuncic.types.Peer;
+import raf.aleksabuncic.types.Token;
+import raf.aleksabuncic.util.Utils;
 
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
@@ -105,6 +104,29 @@ public class NodeRuntime {
      */
     private final List<Peer> fingerTable = new ArrayList<>();
 
+    /**
+     * Whether the node is currently requesting to be in a critical section
+     */
+    @Setter
+    private boolean requestingCS = false;
+
+    /**
+     * Current request number
+     */
+    @Setter
+    private int requestNumber = 0;
+
+    /**
+     * Map of known requests
+     */
+    private final Map<Integer, Integer> RN = new ConcurrentHashMap<>();
+
+    /**
+     * Current token
+     */
+    @Setter
+    private Token token = null;
+
     public NodeRuntime(Node nodeModel) {
         this.nodeModel = nodeModel;
     }
@@ -179,10 +201,17 @@ public class NodeRuntime {
 
             } else {
                 System.err.println("Did not receive valid response from bootstrap.");
+                shutdown();
             }
 
         } catch (Exception e) {
             System.err.println("Failed to register with bootstrap server: " + e.getMessage());
+            shutdown();
+        }
+
+        if (knownPeers.isEmpty()) {
+            this.token = new Token();
+            System.out.println("This node is the first. Token initialized.");
         }
     }
 
@@ -426,4 +455,85 @@ public class NodeRuntime {
         Sender.sendMessage(destination.ip(), destination.port(), msg);
     }
 
+    /**
+     * Check if the node has a currently active token
+     *
+     * @return True if there is a token, false if it's null
+     */
+    public boolean hasToken() {
+        return token != null;
+    }
+
+    /**
+     * Handles entering a critical section
+     */
+    public synchronized void enterCriticalSection() {
+        requestingCS = true;
+        requestNumber++;
+
+        int myId = nodeModel.getListenPort();
+        RN.put(myId, requestNumber);
+
+        if (!hasToken()) {
+            for (Peer peer : knownPeers) {
+                if (peer.port() == myId) continue;
+
+                Message request = new Message("TOKEN_REQUEST", nodeModel.getListenIp(), myId, String.valueOf(requestNumber));
+                String targetId = hashPeer(peer);
+                forwardMessage(targetId, request);
+            }
+
+            while (!hasToken()) {
+                try {
+                    wait();
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+
+        System.out.println("Entered critical section.");
+    }
+
+    /**
+     * Handles exiting a critical section
+     */
+    public synchronized void exitCriticalSection() {
+        requestingCS = false;
+        int myId = nodeModel.getListenPort();
+
+        token.LN.put(myId, RN.get(myId));
+
+        for (Integer i : RN.keySet()) {
+            int rn = RN.get(i);
+            int ln = token.LN.getOrDefault(i, 0);
+
+            if (rn > ln && !token.queue.contains(i)) {
+                token.queue.add(i);
+            }
+        }
+
+
+        if (!token.queue.isEmpty()) {
+            Integer next = token.queue.poll();
+
+            Peer nextPeer = knownPeers.stream()
+                    .filter(p -> p.port() == next)
+                    .findFirst()
+                    .orElse(null);
+
+            if (nextPeer != null) {
+                String tokenString = Utils.serializeToken(token);
+                Message tokenMsg = new Message("TOKEN", nodeModel.getListenIp(), myId, tokenString);
+                forwardMessage(hashPeer(nextPeer), tokenMsg);
+
+                String targetId = hashPeer(nextPeer);
+                forwardMessage(targetId, tokenMsg);
+
+                token = null;
+                System.out.println("Token sent to node " + next);
+            }
+        }
+
+        System.out.println("Exited critical section.");
+    }
 }

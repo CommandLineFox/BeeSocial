@@ -21,14 +21,20 @@ public class DeleteFileHandler extends ResponseHandler {
 
     @Override
     public void handle(Message message) {
-        String fileName = message.content();
+        runtime.enterCriticalSection();
 
-        String uploadsPath = runtime.getNodeModel().getWorkPath() + File.separator + "uploads" + File.separator + fileName;
-        String backupPath = runtime.getNodeModel().getWorkPath() + File.separator + "backup" + File.separator + fileName;
+        try {
+            String fileName = message.content();
 
-        boolean deletedMain = new File(uploadsPath).delete();
-        boolean deletedBackup = new File(backupPath).delete();
+            String uploadsPath = runtime.getNodeModel().getWorkPath() + File.separator + "uploads" + File.separator + fileName;
+            String backupPath = runtime.getNodeModel().getWorkPath() + File.separator + "backup" + File.separator + fileName;
 
-        //System.out.println("DELETE_FILE: '" + fileName + "' → uploads: " + deletedMain + ", backup: " + deletedBackup);
+            boolean deletedMain = new File(uploadsPath).delete();
+            boolean deletedBackup = new File(backupPath).delete();
+
+            //System.out.println("DELETE_FILE: '" + fileName + "' → uploads: " + deletedMain + ", backup: " + deletedBackup);
+        } finally {
+            runtime.exitCriticalSection();
+        }
     }
 }

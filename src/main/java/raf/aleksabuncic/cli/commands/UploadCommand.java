@@ -3,7 +3,7 @@ package raf.aleksabuncic.cli.commands;
 import raf.aleksabuncic.cli.command.Command;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
-import raf.aleksabuncic.util.FileUtils;
+import raf.aleksabuncic.util.Utils;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -39,7 +39,7 @@ public class UploadCommand extends Command {
             return;
         }
 
-        if (!FileUtils.checkIfMediaFile(filePath)) {
+        if (!Utils.checkIfMediaFile(filePath)) {
             System.out.println("Unsupported file type. Only media files are allowed.");
             return;
         }

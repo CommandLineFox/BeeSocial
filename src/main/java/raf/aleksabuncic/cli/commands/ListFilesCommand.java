@@ -3,7 +3,7 @@ package raf.aleksabuncic.cli.commands;
 import raf.aleksabuncic.cli.command.Command;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
-import raf.aleksabuncic.util.FileUtils;
+import raf.aleksabuncic.util.Utils;
 
 import java.io.File;
 
@@ -23,7 +23,7 @@ public class ListFilesCommand extends Command {
     @Override
     public void execute(String[] args) {
         if (args.length == 0) {
-            var files = FileUtils.listFilesInDirectory(runtime.getNodeModel().getWorkPath() + File.separator + "uploads");
+            var files = Utils.listFilesInDirectory(runtime.getNodeModel().getWorkPath() + File.separator + "uploads");
             if (files.isEmpty()) {
                 System.out.println("No local files.");
             } else {

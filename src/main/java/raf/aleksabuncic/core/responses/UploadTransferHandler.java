@@ -25,6 +25,8 @@ public class UploadTransferHandler extends ResponseHandler {
 
     @Override
     public void handle(Message msg) {
+        runtime.enterCriticalSection();
+
         try {
             String[] parts = msg.content().split("::", 2);
             if (parts.length != 2) {
@@ -49,6 +51,8 @@ public class UploadTransferHandler extends ResponseHandler {
 
         } catch (Exception e) {
             System.err.println("Failed to handle UPLOAD_TRANSFER: " + e.getMessage());
+        } finally {
+            runtime.exitCriticalSection();
         }
     }
 }

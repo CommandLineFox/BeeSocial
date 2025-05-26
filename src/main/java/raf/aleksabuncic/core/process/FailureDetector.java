@@ -4,7 +4,7 @@ import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Peer;
-import raf.aleksabuncic.util.FileUtils;
+import raf.aleksabuncic.util.Utils;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -116,7 +116,7 @@ public class FailureDetector implements Runnable {
 
         for (File file : files) {
             try {
-                File dest = new File(mainDir, FileUtils.extractOriginalFileName(file.getName()));
+                File dest = new File(mainDir, Utils.extractOriginalFileName(file.getName()));
                 Files.copy(file.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 System.out.println("Restored: " + file.getName());
             } catch (Exception e) {
