@@ -63,6 +63,9 @@ public class FailureDetector implements Runnable {
                 if (elapsed >= strong) {
                     System.out.println("Strong suspicion: Successor failed. Attempting recovery...");
 
+                    runtime.setSuccessor(null);
+                    runtime.setSuccessorId(null);
+
                     restoreFromBackup();
 
                     for (Peer peer : runtime.getKnownPeers()) {
