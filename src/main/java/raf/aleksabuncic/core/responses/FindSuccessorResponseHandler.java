@@ -21,7 +21,7 @@ public class FindSuccessorResponseHandler extends ResponseHandler {
 
     @Override
     public void handle(Message msg) {
-        System.out.println("Received FIND_SUCCESSOR_RESPONSE: " + msg.content());
+        //System.out.println("Received FIND_SUCCESSOR_RESPONSE: " + msg.content());
 
         String[] parts = msg.content().split(":");
         if (parts.length != 2) {
@@ -35,7 +35,7 @@ public class FindSuccessorResponseHandler extends ResponseHandler {
         Peer successor = new Peer(ip, port);
         runtime.setSuccessor(successor);
 
-        System.out.println("Updated local successor to: " + ip + ":" + port);
+        //System.out.println("Updated local successor to: " + ip + ":" + port);
 
         runtime.notifySuccessor();
     }

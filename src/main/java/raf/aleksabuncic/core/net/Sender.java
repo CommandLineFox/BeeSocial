@@ -38,18 +38,18 @@ public class Sender {
      */
     public static Message sendMessageWithResponse(String host, int port, Message message) {
         try (Socket socket = new Socket(host, port)) {
-            System.out.println("[SENDER] Connecting to " + host + ":" + port);
+            //System.out.println("[SENDER] Connecting to " + host + ":" + port);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
 
-            System.out.println("[SENDER] Sending message type: " + message.type());
+            //System.out.println("[SENDER] Sending message type: " + message.type());
             out.writeObject(message);
             out.flush();
 
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
             Message response = (Message) in.readObject();
-            System.out.println("[SENDER] Received response: " + (response != null ? response.type() : "null"));
+            //System.out.println("[SENDER] Received response: " + (response != null ? response.type() : "null"));
 
             return response;
         } catch (Exception e) {

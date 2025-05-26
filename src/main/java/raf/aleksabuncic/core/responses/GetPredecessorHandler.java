@@ -18,7 +18,7 @@ public class GetPredecessorHandler extends ResponseHandler {
     @Override
     public void handle(Message msg) {
         String targetId = msg.content();
-        System.out.println("Received GET_PREDECESSOR for ID " + targetId + " from " + msg.senderIp() + ":" + msg.senderPort());
+        //System.out.println("Received GET_PREDECESSOR for ID " + targetId + " from " + msg.senderIp() + ":" + msg.senderPort());
 
         Peer predecessor = runtime.getPredecessor();
         String content = (predecessor == null) ? "null" : predecessor.ip() + ":" + predecessor.port();
@@ -28,6 +28,6 @@ public class GetPredecessorHandler extends ResponseHandler {
         String senderId = runtime.hashString(msg.senderIp() + ":" + msg.senderPort());
         runtime.forwardMessage(senderId, response);
 
-        System.out.println("Sent PREDECESSOR_INFO to " + msg.senderIp() + ":" + msg.senderPort() + " → " + content);
+        //System.out.println("Sent PREDECESSOR_INFO to " + msg.senderIp() + ":" + msg.senderPort() + " → " + content);
     }
 }

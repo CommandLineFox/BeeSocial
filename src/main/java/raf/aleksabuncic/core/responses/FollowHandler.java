@@ -21,6 +21,6 @@ public class FollowHandler extends ResponseHandler {
     public void handle(Message msg) {
         int senderPort = msg.senderPort();
         runtime.getPendingRequests().add(senderPort);
-        System.out.println("Received FOLLOW from Node " + senderPort);
+        //System.out.println("Received FOLLOW from Node " + senderPort);
     }
 }

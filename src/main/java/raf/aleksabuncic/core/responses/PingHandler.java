@@ -19,13 +19,13 @@ public class PingHandler extends ResponseHandler {
 
     @Override
     public void handle(Message message) {
-        System.out.println("Received PING from Node " + message.senderIp() + ":" + message.senderPort());
+        //System.out.println("Received PING from Node " + message.senderIp() + ":" + message.senderPort());
 
         Message pong = new Message("PONG", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), "");
 
         String senderId = runtime.hashString(message.senderIp() + ":" + message.senderPort());
         runtime.forwardMessage(senderId, pong);
 
-        System.out.println("Responded with PONG via forwardMessage to " + message.senderIp() + ":" + message.senderPort());
+        //System.out.println("Responded with PONG via forwardMessage to " + message.senderIp() + ":" + message.senderPort());
     }
 }

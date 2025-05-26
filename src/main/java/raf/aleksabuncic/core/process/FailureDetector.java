@@ -40,7 +40,7 @@ public class FailureDetector implements Runnable {
 
                 Message ping = new Message("PING", myIp, myPort, "");
                 Sender.sendMessage(target.ip(), target.port(), ping);
-                System.out.println("Sent PING to successor " + target);
+                //System.out.println("Sent PING to successor " + target);
 
                 lock.lock();
                 try {

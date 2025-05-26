@@ -27,7 +27,7 @@ public class Stabilizer implements Runnable {
 
                 Message request = new Message("GET_PREDECESSOR", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), "");
                 Sender.sendMessage(successor.ip(), successor.port(), request);
-                System.out.println("Stabilizer: Sent GET_PREDECESSOR to " + successor);
+                //System.out.println("Stabilizer: Sent GET_PREDECESSOR to " + successor);
 
                 runtime.notifySuccessor();
 

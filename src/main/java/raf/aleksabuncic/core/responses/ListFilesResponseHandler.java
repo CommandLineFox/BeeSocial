@@ -19,7 +19,7 @@ public class ListFilesResponseHandler extends ResponseHandler {
 
     @Override
     public void handle(Message message) {
-        System.out.println("Received LIST_FILES_RESPONSE from Node " + message.senderPort());
+        //System.out.println("Received LIST_FILES_RESPONSE from Node " + message.senderPort());
         String[] files = message.content().split(",");
         if (files.length == 0 || (files.length == 1 && files[0].isEmpty())) {
             System.out.println("Remote node has no files.");

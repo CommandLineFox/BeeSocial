@@ -21,7 +21,7 @@ public class FixFingers implements Runnable {
         while (runtime.isRunning()) {
             try {
                 if (runtime.getSuccessor() == null || runtime.getSuccessorId() == null) {
-                    System.out.println("FixFingers: Skipping, successor not yet known.");
+                    //System.out.println("FixFingers: Skipping, successor not yet known.");
                     Thread.sleep(1000);
                     continue;
                 }
@@ -37,19 +37,18 @@ public class FixFingers implements Runnable {
                     Peer finger = runtime.findSuccessor(targetId);
 
                     if (finger == null) {
-
-                        System.out.println("FixFingers: Could not find finger[" + i + "] (null)");
+                        //System.out.println("FixFingers: Could not find finger[" + i + "] (null)");
                         continue;
                     }
 
                     if (runtime.getFingerTable().size() <= i) {
                         runtime.getFingerTable().add(finger);
-                        System.out.println("FixFingers: Added finger[" + i + "] → " + finger);
+                        //System.out.println("FixFingers: Added finger[" + i + "] → " + finger);
                     } else {
                         Peer current = runtime.getFingerTable().get(i);
                         if (!current.equals(finger)) {
                             runtime.getFingerTable().set(i, finger);
-                            System.out.println("FixFingers: Updated finger[" + i + "] → " + finger);
+                            //System.out.println("FixFingers: Updated finger[" + i + "] → " + finger);
                         }
                     }
 

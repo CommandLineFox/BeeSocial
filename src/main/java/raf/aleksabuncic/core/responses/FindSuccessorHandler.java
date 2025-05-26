@@ -17,7 +17,7 @@ public class FindSuccessorHandler extends ResponseHandler {
 
     @Override
     public void handle(Message msg) {
-        System.out.println("Received FIND_SUCCESSOR for ID " + msg.content());
+        //System.out.println("Received FIND_SUCCESSOR for ID " + msg.content());
         String targetId = msg.content();
 
         Peer successor = runtime.findSuccessor(targetId);
@@ -33,6 +33,6 @@ public class FindSuccessorHandler extends ResponseHandler {
         String senderId = runtime.hashString(msg.senderIp() + ":" + msg.senderPort());
         runtime.forwardMessage(senderId, response);
 
-        System.out.println("Handled FIND_SUCCESSOR for ID " + targetId + " → " + successor);
+        //System.out.println("Handled FIND_SUCCESSOR for ID " + targetId + " → " + successor);
     }
 }

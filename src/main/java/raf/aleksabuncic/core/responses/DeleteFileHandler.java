@@ -29,6 +29,6 @@ public class DeleteFileHandler extends ResponseHandler {
         boolean deletedMain = new File(uploadsPath).delete();
         boolean deletedBackup = new File(backupPath).delete();
 
-        System.out.println("DELETE_FILE: '" + fileName + "' → uploads: " + deletedMain + ", backup: " + deletedBackup);
+        //System.out.println("DELETE_FILE: '" + fileName + "' → uploads: " + deletedMain + ", backup: " + deletedBackup);
     }
 }

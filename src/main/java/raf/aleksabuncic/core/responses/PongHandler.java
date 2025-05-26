@@ -19,7 +19,7 @@ public class PongHandler extends ResponseHandler {
 
     @Override
     public void handle(Message msg) {
-        System.out.println("Received PONG from Node " + msg.senderPort());
+        //System.out.println("Received PONG from Node " + msg.senderPort());
         runtime.getFailureDetector().notifyPongReceived();
     }
 }

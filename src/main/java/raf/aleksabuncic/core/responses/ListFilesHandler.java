@@ -25,7 +25,7 @@ public class ListFilesHandler extends ResponseHandler {
     @Override
     public void handle(Message message) {
         String targetId = message.content();
-        System.out.println("Handling LIST_FILES for ID " + targetId + " from " + message.senderIp() + ":" + message.senderPort());
+        //System.out.println("Handling LIST_FILES for ID " + targetId + " from " + message.senderIp() + ":" + message.senderPort());
 
         boolean allowed = runtime.getNodeModel().getVisibility() == NodeVisibility.PUBLIC || runtime.getFollowers().contains(message.senderPort());
 
@@ -43,6 +43,6 @@ public class ListFilesHandler extends ResponseHandler {
         String senderId = runtime.hashString(message.senderIp() + ":" + message.senderPort());
         runtime.forwardMessage(senderId, response);
 
-        System.out.println("Sent LIST_FILES_RESPONSE to " + message.senderIp() + ":" + message.senderPort());
+        //System.out.println("Sent LIST_FILES_RESPONSE to " + message.senderIp() + ":" + message.senderPort());
     }
 }
