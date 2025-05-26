@@ -1,6 +1,5 @@
 package raf.aleksabuncic.core.responses;
 
-import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.response.ResponseHandler;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
@@ -20,8 +19,8 @@ public class FindSuccessorHandler extends ResponseHandler {
     public void handle(Message msg) {
         System.out.println("Received FIND_SUCCESSOR for ID " + msg.content());
         String targetId = msg.content();
-        Peer successor = runtime.findSuccessor(targetId);
 
+        Peer successor = runtime.findSuccessor(targetId);
         if (successor == null) {
             System.out.println("Could not resolve successor for ID: " + targetId);
             return;
@@ -29,12 +28,11 @@ public class FindSuccessorHandler extends ResponseHandler {
 
         String responseContent = successor.ip() + ":" + successor.port();
 
-        String thisNodeIp = runtime.getNodeModel().getListenIp();
-        int thisNodePort = runtime.getNodeModel().getListenPort();
+        Message response = new Message("FIND_SUCCESSOR_RESPONSE", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), responseContent);
 
-        Message response = new Message("FIND_SUCCESSOR_RESPONSE", thisNodeIp, thisNodePort, responseContent);
+        String senderId = runtime.hashString(msg.senderIp() + ":" + msg.senderPort());
+        runtime.forwardMessage(senderId, response);
 
-        Sender.sendMessage(msg.senderIp(), msg.senderPort(), response);
         System.out.println("Handled FIND_SUCCESSOR for ID " + targetId + " → " + successor);
     }
 }

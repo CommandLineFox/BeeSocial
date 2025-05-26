@@ -1,10 +1,13 @@
 package raf.aleksabuncic.cli.commands;
 
 import raf.aleksabuncic.cli.command.Command;
-import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
+import raf.aleksabuncic.types.Peer;
 
+/**
+ * Accepts a follow request from a node and notifies that node via routed Chord communication.
+ */
 public class AcceptCommand extends Command {
     public AcceptCommand(NodeRuntime runtime) {
         super(runtime);
@@ -27,9 +30,13 @@ public class AcceptCommand extends Command {
             String localIp = runtime.getNodeModel().getListenIp();
             int localPort = runtime.getNodeModel().getListenPort();
 
+            Peer targetPeer = new Peer("127.0.0.1", senderPort);
+            String targetId = runtime.hashPeer(targetPeer);
+
             Message msg = new Message("ACCEPT", localIp, localPort, "");
-            Sender.sendMessage("127.0.0.1", senderPort, msg);
-            System.out.println("Accepted request from Node on port " + senderPort);
+            runtime.forwardMessage(targetId, msg);
+
+            System.out.println("Accepted request from Node on port " + senderPort + " via Chord route.");
         } else {
             System.out.println("No pending request from Node " + senderPort);
         }

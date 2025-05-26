@@ -1,10 +1,15 @@
 package raf.aleksabuncic.cli.commands;
+
 import raf.aleksabuncic.cli.command.Command;
-import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.util.FileUtils;
 
+import java.io.File;
+
+/**
+ * Lists all files stored on this node. Optionally, can send a request to a target node to list files stored there.
+ */
 public class ListFilesCommand extends Command {
     public ListFilesCommand(NodeRuntime runtime) {
         super(runtime);
@@ -17,19 +22,29 @@ public class ListFilesCommand extends Command {
 
     @Override
     public void execute(String[] args) {
-        if (args.length != 1 || !args[0].contains(":")) {
-            System.out.println("Usage: list_files <ip>:<port>");
+        if (args.length == 0) {
+            var files = FileUtils.listFilesInDirectory(runtime.getNodeModel().getWorkPath() + File.separator + "uploads");
+            if (files.isEmpty()) {
+                System.out.println("No local files.");
+            } else {
+                System.out.println("Files stored on this node:");
+                for (String f : files) {
+                    System.out.println(" - " + f);
+                }
+            }
             return;
         }
 
-        String[] parts = args[0].split(":");
-        String targetIp = parts[0];
-        int targetPort = Integer.parseInt(parts[1]);
+        if (args.length != 1) {
+            System.out.println("Usage: list_files [<target_id>]");
+            return;
+        }
 
+        String targetId = args[0];
         String localIp = runtime.getNodeModel().getListenIp();
         int localPort = runtime.getNodeModel().getListenPort();
 
         Message msg = new Message("LIST_FILES", localIp, localPort, "");
-        Sender.sendMessage(targetIp, targetPort, msg);
+        runtime.forwardMessage(targetId, msg);
     }
 }

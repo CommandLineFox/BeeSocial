@@ -4,6 +4,9 @@ import raf.aleksabuncic.cli.command.Command;
 
 import java.util.Map;
 
+/**
+ * Prints a list of available commands to the console.
+ */
 public class HelpCommand extends Command {
     private final Map<String, Command> commandMap;
 

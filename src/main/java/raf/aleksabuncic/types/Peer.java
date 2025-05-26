@@ -2,6 +2,12 @@ package raf.aleksabuncic.types;
 
 import java.util.Objects;
 
+/**
+ * Represents a node in the Chord ring.
+ *
+ * @param ip   IP address.
+ * @param port Port number.
+ */
 public record Peer(String ip, int port) {
     @Override
     public String toString() {

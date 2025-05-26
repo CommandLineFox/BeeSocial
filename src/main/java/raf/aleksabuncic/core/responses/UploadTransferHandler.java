@@ -10,6 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Base64;
 
+/**
+ * Handles what happens when a node receives a UPLOAD_TRANSFER message.
+ */
 public class UploadTransferHandler extends ResponseHandler {
     public UploadTransferHandler(NodeRuntime runtime) {
         super(runtime);

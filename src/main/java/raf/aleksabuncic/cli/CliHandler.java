@@ -6,6 +6,9 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 
 import java.util.Scanner;
 
+/**
+ * Handles the command line interface (CLI) and handles user input.
+ */
 public class CliHandler implements Runnable {
     private final NodeRuntime runtime;
     private final CommandRegistry registry;

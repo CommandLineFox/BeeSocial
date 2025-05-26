@@ -6,6 +6,9 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents a registry of commands that can be executed by the CLI.
+ */
 public class CommandRegistry {
     private final Map<String, Command> commands = new HashMap<>();
 

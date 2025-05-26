@@ -1,11 +1,13 @@
 package raf.aleksabuncic.cli.commands;
 
 import raf.aleksabuncic.cli.command.Command;
-import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
+import raf.aleksabuncic.types.Peer;
 
-
+/**
+ * Sends a follow request to a target node using Chord routing.
+ */
 public class FollowCommand extends Command {
     public FollowCommand(NodeRuntime runtime) {
         super(runtime);
@@ -33,11 +35,15 @@ public class FollowCommand extends Command {
             return;
         }
 
+        Peer targetPeer = new Peer(targetIp, targetPort);
+        String targetId = runtime.hashPeer(targetPeer);
+
         String localIp = runtime.getNodeModel().getListenIp();
         int localPort = runtime.getNodeModel().getListenPort();
-        Message followRequest = new Message("FOLLOW_REQUEST", localIp, localPort, "");
-        Sender.sendMessage(targetIp, targetPort, followRequest);
 
-        System.out.println("Follow request sent to " + targetIp + ":" + targetPort);
+        Message followRequest = new Message("FOLLOW", localIp, localPort, "");
+        runtime.forwardMessage(targetId, followRequest);
+
+        System.out.println("Follow request sent to " + targetIp + ":" + targetPort + " via Chord route.");
     }
 }

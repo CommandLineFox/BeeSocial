@@ -7,6 +7,9 @@ import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * Handles incoming connections.
+ */
 public class ConnectionHandler implements Runnable {
     private final NodeRuntime node;
     private final int port;

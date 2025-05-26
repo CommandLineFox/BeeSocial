@@ -1,9 +1,10 @@
-package raf.aleksabuncic.core.failure;
+package raf.aleksabuncic.core.process;
 
 import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Peer;
+import raf.aleksabuncic.util.FileUtils;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -11,8 +12,9 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static raf.aleksabuncic.util.FileUtils.extractOriginalFileName;
-
+/**
+ * Handles the failure detection process by periodically sending PING messages
+ */
 public class FailureDetector implements Runnable {
     private final NodeRuntime runtime;
     private long lastPongTime = System.currentTimeMillis();
@@ -111,7 +113,7 @@ public class FailureDetector implements Runnable {
 
         for (File file : files) {
             try {
-                File dest = new File(mainDir, extractOriginalFileName(file.getName()));
+                File dest = new File(mainDir, FileUtils.extractOriginalFileName(file.getName()));
                 Files.copy(file.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 System.out.println("Restored: " + file.getName());
             } catch (Exception e) {

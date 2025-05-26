@@ -4,6 +4,9 @@ import raf.aleksabuncic.cli.command.Command;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.NodeVisibility;
 
+/**
+ * Sets the visibility of the node.
+ */
 public class VisibilityCommand extends Command {
     public VisibilityCommand(NodeRuntime runtime) {
         super(runtime);

@@ -2,6 +2,9 @@ package raf.aleksabuncic.cli.command;
 
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 
+/**
+ * Represents a command that can be executed by the CLI.
+ */
 public abstract class Command {
     protected final NodeRuntime runtime;
 

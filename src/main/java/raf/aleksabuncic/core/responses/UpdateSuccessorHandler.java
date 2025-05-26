@@ -5,6 +5,9 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Peer;
 
+/**
+ * Handles what happens when a node receives a UPDATE_SUCCESSOR message.
+ */
 public class UpdateSuccessorHandler extends ResponseHandler {
     public UpdateSuccessorHandler(NodeRuntime runtime) {
         super(runtime);

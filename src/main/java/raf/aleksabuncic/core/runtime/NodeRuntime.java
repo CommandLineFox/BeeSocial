@@ -2,11 +2,12 @@ package raf.aleksabuncic.core.runtime;
 
 import lombok.Getter;
 import lombok.Setter;
-import raf.aleksabuncic.core.failure.FailureDetector;
+import raf.aleksabuncic.core.process.FailureDetector;
 import raf.aleksabuncic.core.net.ConnectionHandler;
 import raf.aleksabuncic.core.net.Sender;
+import raf.aleksabuncic.core.process.FixFingers;
 import raf.aleksabuncic.core.response.ResponseRegistry;
-import raf.aleksabuncic.core.stabilizer.Stabilizer;
+import raf.aleksabuncic.core.process.Stabilizer;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Node;
 import raf.aleksabuncic.types.Peer;
@@ -16,7 +17,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -63,6 +66,11 @@ public class NodeRuntime {
     private final Stabilizer stabilizer = new Stabilizer(this);
 
     /**
+     * Fix fingers thread that periodically checks for node stability and updates finger table if needed.
+     */
+    private final FixFingers fixFingers = new FixFingers(this);
+
+    /**
      * Known nodes to communicate with
      */
     private final Set<Peer> knownPeers = ConcurrentHashMap.newKeySet();
@@ -91,6 +99,12 @@ public class NodeRuntime {
     @Setter
     private String predecessorId;
 
+    /**
+     * Finger table for efficient O(log N) lookups.
+     * Each entry points to a node that succeeds (id + 2^i) mod 2^m
+     */
+    private final List<Peer> fingerTable = new ArrayList<>();
+
     public NodeRuntime(Node nodeModel) {
         this.nodeModel = nodeModel;
     }
@@ -102,6 +116,7 @@ public class NodeRuntime {
         new Thread(new ConnectionHandler(this, nodeModel.getListenPort())).start();
         new Thread(failureDetector).start();
         new Thread(stabilizer).start();
+        new Thread(fixFingers).start();
 
         try {
             Thread.sleep(1000);
@@ -178,33 +193,23 @@ public class NodeRuntime {
      * @return Peer that is responsible for the target ID
      */
     public Peer findSuccessor(String targetId) {
+        if (successor == null || successorId == null) {
+            System.err.println("[findSuccessor] No successor info. Returning self.");
+            return new Peer(nodeModel.getListenIp(), nodeModel.getListenPort());
+        }
+
         String myId = nodeModel.getChordId();
+
         System.out.println("Looking for successor of ID: " + targetId);
         System.out.println("My ID: " + myId + ", Successor ID: " + successorId);
 
-        if (successor == null || successorId == null || isBetween(myId, targetId, successorId)) {
-            return successor != null ? successor : new Peer(nodeModel.getListenIp(), nodeModel.getListenPort());
-        } else {
-            // WARNING: only use sync sendFindSuccessor here if it's acceptable
-            // Ideally this should be replaced with finger table logic or recursive logic
+        if (isBetween(myId, targetId, successorId)) {
             return successor;
         }
-    }
 
-    /**
-     * Sends a FIND_SUCCESSOR message for the given target ID.
-     * The result will be processed asynchronously via the FIND_SUCCESSOR_RESPONSE handler.
-     *
-     * @param targetId Chord ID to resolve
-     */
-    public void requestSuccessor(String targetId) {
-        String myId = nodeModel.getChordId();
-        System.out.println("Requesting successor for ID: " + targetId);
-        System.out.println("My ID: " + myId + ", Successor ID: " + successorId);
+        Peer nextHop = closestPrecedingFinger(targetId);
 
-        if (successor != null && successorId != null && !isBetween(myId, targetId, successorId)) {
-            Sender.sendFindSuccessor(successor, targetId, nodeModel.getListenIp(), nodeModel.getListenPort());
-        }
+        return Sender.sendFindSuccessorWithResponse(nextHop, targetId, nodeModel.getListenIp(), nodeModel.getListenPort());
     }
 
     /**
@@ -360,4 +365,65 @@ public class NodeRuntime {
 
         shutdown();
     }
+
+    /**
+     * Computes the SHA-1 hash of a given string.
+     *
+     * @param input The string to hash. Must be a valid UTF-8 string.
+     * @return The SHA-1 hash of the input string as a hexadecimal string.
+     */
+    public String hashString(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            byte[] hash = md.digest(input.getBytes());
+            return new BigInteger(1, hash).toString(16);
+        } catch (Exception e) {
+            throw new RuntimeException("Hashing failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Finds the closest preceding node in the finger table for the given ID.
+     * Used in recursive/hop-by-hop routing to get closer to the target.
+     *
+     * @param targetId Target Chord ID we're routing toward
+     * @return The closest known peer whose ID is between this node's ID and the target ID
+     */
+    public Peer closestPrecedingFinger(String targetId) {
+        String myId = nodeModel.getChordId();
+
+        for (int i = fingerTable.size() - 1; i >= 0; i--) {
+            Peer finger = fingerTable.get(i);
+            String fingerId = hashPeer(finger);
+
+            if (isBetween(myId, fingerId, targetId)) {
+                return finger;
+            }
+        }
+
+        return successor;
+    }
+
+    /**
+     * Routes a message hop-by-hop using the Chord ring toward the given hash.
+     * Uses finger table and recursive routing (O(log N)).
+     *
+     * @param targetId Hashed ID of the destination (e.g., file name, IP:port, etc.)
+     * @param msg      Message to send
+     */
+    public void forwardMessage(String targetId, Message msg) {
+        Peer destination = findSuccessor(targetId);
+        if (destination == null) {
+            System.err.println("Cannot route message, no destination found for ID: " + targetId);
+            return;
+        }
+
+        if (destination.port() == nodeModel.getListenPort()) {
+            handleMessage(msg);
+            return;
+        }
+
+        Sender.sendMessage(destination.ip(), destination.port(), msg);
+    }
+
 }

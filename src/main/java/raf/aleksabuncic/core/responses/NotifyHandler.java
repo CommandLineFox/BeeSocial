@@ -5,6 +5,9 @@ import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Peer;
 
+/**
+ * Handles what happens when a node receives a NOTIFY message.
+ */
 public class NotifyHandler extends ResponseHandler {
     public NotifyHandler(NodeRuntime runtime) {
         super(runtime);

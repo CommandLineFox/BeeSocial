@@ -7,11 +7,15 @@ import raf.aleksabuncic.types.Message;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents a registry of response handlers that can handle a single response message.
+ */
 public class ResponseRegistry {
     private final Map<String, ResponseHandler> handlers = new HashMap<>();
 
     public ResponseRegistry(NodeRuntime runtime) {
         register(new AcceptHandler(runtime));
+        register(new DeleteFileHandler(runtime));
         register(new FindSuccessorHandler(runtime));
         register(new FindSuccessorResponseHandler(runtime));
         register(new FollowHandler(runtime));

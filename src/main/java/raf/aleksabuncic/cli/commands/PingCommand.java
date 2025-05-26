@@ -1,10 +1,12 @@
 package raf.aleksabuncic.cli.commands;
 
 import raf.aleksabuncic.cli.command.Command;
-import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 
+/**
+ * Sends a PING message to a target node.
+ */
 public class PingCommand extends Command {
     public PingCommand(NodeRuntime runtime) {
         super(runtime);
@@ -17,19 +19,16 @@ public class PingCommand extends Command {
 
     @Override
     public void execute(String[] args) {
-        if (args.length != 1 || !args[0].contains(":")) {
-            System.out.println("Usage: ping <ip>:<port>");
+        if (args.length != 1) {
+            System.out.println("Usage: ping <target_id>");
             return;
         }
 
-        String[] parts = args[0].split(":");
-        String targetIp = parts[0];
-        int targetPort = Integer.parseInt(parts[1]);
-
+        String targetId = args[0];
         String localIp = runtime.getNodeModel().getListenIp();
         int localPort = runtime.getNodeModel().getListenPort();
 
         Message ping = new Message("PING", localIp, localPort, "");
-        Sender.sendMessage(targetIp, targetPort, ping);
+        runtime.forwardMessage(targetId, ping);
     }
 }

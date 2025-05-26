@@ -7,6 +7,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+/**
+ * Helper class for sending messages to remote nodes.
+ */
 public class Sender {
     /**
      * Sends a message to a remote node.
@@ -67,5 +70,30 @@ public class Sender {
     public static void sendFindSuccessor(Peer targetPeer, String targetId, String senderIp, int senderPort) {
         Message request = new Message("FIND_SUCCESSOR", senderIp, senderPort, targetId);
         sendMessage(targetPeer.ip(), targetPeer.port(), request);
+    }
+
+    /**
+     * Sends a FIND_SUCCESSOR message and waits for a response (used in recursive routing).
+     *
+     * @param targetPeer Target peer to ask
+     * @param targetId   Chord ID for which successor is requested
+     * @param senderIp   Sender IP
+     * @param senderPort Sender Port
+     * @return Peer that is the resolved successor
+     */
+    public static Peer sendFindSuccessorWithResponse(Peer targetPeer, String targetId, String senderIp, int senderPort) {
+        Message request = new Message("FIND_SUCCESSOR", senderIp, senderPort, targetId);
+        Message response = sendMessageWithResponse(targetPeer.ip(), targetPeer.port(), request);
+
+        if (response != null && "FIND_SUCCESSOR_RESPONSE".equals(response.type())) {
+            String[] parts = response.content().split(":");
+            if (parts.length == 2) {
+                String ip = parts[0];
+                int port = Integer.parseInt(parts[1]);
+                return new Peer(ip, port);
+            }
+        }
+
+        return null;
     }
 }

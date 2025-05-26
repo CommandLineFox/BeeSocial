@@ -3,8 +3,10 @@ package raf.aleksabuncic.core.responses;
 import raf.aleksabuncic.core.response.ResponseHandler;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
-import raf.aleksabuncic.core.net.Sender;
 
+/**
+ * Handles what happens when a node receives a PING message.
+ */
 public class PingHandler extends ResponseHandler {
     public PingHandler(NodeRuntime runtime) {
         super(runtime);
@@ -17,12 +19,13 @@ public class PingHandler extends ResponseHandler {
 
     @Override
     public void handle(Message message) {
-        System.out.println("Received PING from Node " + message.senderPort());
+        System.out.println("Received PING from Node " + message.senderIp() + ":" + message.senderPort());
 
-        String localIp = runtime.getNodeModel().getListenIp();
-        int localPort = runtime.getNodeModel().getListenPort();
+        Message pong = new Message("PONG", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), "");
 
-        Message pong = new Message("PONG", localIp, localPort, "");
-        Sender.sendMessage(message.senderIp(), message.senderPort(), pong);
+        String senderId = runtime.hashString(message.senderIp() + ":" + message.senderPort());
+        runtime.forwardMessage(senderId, pong);
+
+        System.out.println("Responded with PONG via forwardMessage to " + message.senderIp() + ":" + message.senderPort());
     }
 }

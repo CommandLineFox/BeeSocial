@@ -4,6 +4,9 @@ import raf.aleksabuncic.bootstrap.BootstrapServer;
 import raf.aleksabuncic.config.ConfigHandler;
 import raf.aleksabuncic.types.BootstrapConfig;
 
+/**
+ * Bootstrap starter class.
+ */
 public class BootstrapStarter {
     public static void main(String[] args) {
         BootstrapConfig config = ConfigHandler.loadBootstrapConfig("config.json");

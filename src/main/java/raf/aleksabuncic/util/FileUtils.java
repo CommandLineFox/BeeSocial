@@ -1,44 +1,13 @@
 package raf.aleksabuncic.util;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * File utilities.
+ */
 public class FileUtils {
-    /**
-     * Uploads a file to a node's image root directory
-     *
-     * @param sourcePathStr Path to the file to upload
-     * @param imageRoot     Destination to upload to
-     * @return True is successful, false is failed
-     */
-    public static boolean uploadToWorkingRoot(String sourcePathStr, String imageRoot) {
-        try {
-            Path sourcePath = Path.of(sourcePathStr);
-            if (!Files.exists(sourcePath)) {
-                System.out.println("File does not exist: " + sourcePathStr);
-                return false;
-            }
-
-            File rootDir = new File(imageRoot);
-            if (!rootDir.exists()) {
-                rootDir.mkdirs();
-            }
-
-            Path targetPath = Path.of(imageRoot, sourcePath.getFileName().toString());
-            Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-            return true;
-
-        } catch (IOException e) {
-            System.err.println("Failed to upload file: " + e.getMessage());
-            return false;
-        }
-    }
-
     /**
      * List the files inside a directory path
      *

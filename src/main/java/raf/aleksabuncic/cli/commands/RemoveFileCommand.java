@@ -2,9 +2,11 @@ package raf.aleksabuncic.cli.commands;
 
 import raf.aleksabuncic.cli.command.Command;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
+import raf.aleksabuncic.types.Message;
 
-import java.io.File;
-
+/**
+ * Sends a delete request to a responsible node in the Chord ring.
+ */
 public class RemoveFileCommand extends Command {
     public RemoveFileCommand(NodeRuntime runtime) {
         super(runtime);
@@ -22,16 +24,12 @@ public class RemoveFileCommand extends Command {
             return;
         }
 
-        File file = new File(runtime.getNodeModel().getWorkPath(), "uploads" + File.separator + args[0]);
-        if (!file.exists()) {
-            System.out.println("File not found: " + args[0]);
-            return;
-        }
+        String fileName = args[0];
+        String hash = runtime.hashString(fileName);
 
-        if (file.delete()) {
-            System.out.println("File deleted: " + args[0]);
-        } else {
-            System.out.println("Failed to delete file: " + args[0]);
-        }
+        Message deleteMsg = new Message("DELETE_FILE", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), fileName);
+
+        runtime.forwardMessage(hash, deleteMsg);
+        System.out.println("Forwarded delete request for '" + fileName + "' to node responsible for hash " + hash);
     }
 }

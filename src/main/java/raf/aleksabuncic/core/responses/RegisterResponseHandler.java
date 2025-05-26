@@ -7,6 +7,9 @@ import raf.aleksabuncic.types.Peer;
 
 import java.util.Arrays;
 
+/**
+ * Handles what happens when a node responds to a REGISTER request.
+ */
 public class RegisterResponseHandler extends ResponseHandler {
     public RegisterResponseHandler(NodeRuntime runtime) {
         super(runtime);

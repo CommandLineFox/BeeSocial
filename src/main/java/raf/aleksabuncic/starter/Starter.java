@@ -5,6 +5,9 @@ import raf.aleksabuncic.config.ConfigHandler;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Node;
 
+/**
+ * Starter class.
+ */
 public class Starter {
     public static void main(String[] args) {
         if (args.length < 1) {

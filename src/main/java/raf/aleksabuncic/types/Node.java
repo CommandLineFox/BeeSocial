@@ -10,6 +10,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a node in the system.
+ */
 @Getter
 public class Node {
     /**

@@ -3,6 +3,9 @@ package raf.aleksabuncic.core.response;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 
+/**
+ * Represents a response handler that can handle a single response message.
+ */
 public abstract class ResponseHandler {
     protected final NodeRuntime runtime;
 

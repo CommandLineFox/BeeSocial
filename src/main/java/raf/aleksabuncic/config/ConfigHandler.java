@@ -9,6 +9,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Handles loading of configuration files.
+ */
 public class ConfigHandler {
     /**
      * Loads all nodes from the given resource path.

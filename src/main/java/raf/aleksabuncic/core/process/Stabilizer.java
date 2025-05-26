@@ -1,10 +1,13 @@
-package raf.aleksabuncic.core.stabilizer;
+package raf.aleksabuncic.core.process;
 
 import raf.aleksabuncic.core.net.Sender;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 import raf.aleksabuncic.types.Peer;
 
+/**
+ * Handles the stabilization process by periodically sending GET_PREDECESSOR messages
+ */
 public class Stabilizer implements Runnable {
     private final NodeRuntime runtime;
 

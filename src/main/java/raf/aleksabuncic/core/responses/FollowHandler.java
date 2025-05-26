@@ -4,6 +4,9 @@ import raf.aleksabuncic.core.response.ResponseHandler;
 import raf.aleksabuncic.core.runtime.NodeRuntime;
 import raf.aleksabuncic.types.Message;
 
+/**
+ * Handles what happens when a node requests to follow another node.
+ */
 public class FollowHandler extends ResponseHandler {
     public FollowHandler(NodeRuntime runtime) {
         super(runtime);
