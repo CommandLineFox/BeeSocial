@@ -41,7 +41,7 @@ public class FollowCommand extends Command {
         String localIp = runtime.getNodeModel().getListenIp();
         int localPort = runtime.getNodeModel().getListenPort();
 
-        Message followRequest = new Message("FOLLOW", localIp, localPort, "");
+        Message followRequest = new Message("FOLLOW", localIp, localPort, localIp, localPort, "");
         runtime.forwardMessage(targetId, followRequest);
 
         System.out.println("Follow request sent to " + targetIp + ":" + targetPort + " via Chord route.");

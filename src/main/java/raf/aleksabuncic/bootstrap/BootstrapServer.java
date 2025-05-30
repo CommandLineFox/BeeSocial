@@ -54,13 +54,11 @@ public class BootstrapServer implements Runnable {
 
                 System.out.println("Registered node: " + newNode);
 
-                String responseContent = registeredNodes.stream().filter(p -> !p.equals(newNode)).map(Peer::toString).reduce((a, b) -> a + "," + b).orElse("");
-
-                Message response = new Message("REGISTER_RESPONSE", senderIp, port, responseContent);
+                String responseContent = registeredNodes.stream().filter(p -> !p.equals(newNode)).findAny().map(Peer::toString).orElse("");
+                Message response = new Message("REGISTER_RESPONSE", senderIp, port, senderIp, port, responseContent);
                 out.writeObject(response);
                 out.flush();
             }
-
         } catch (Exception e) {
             System.err.println("Error handling bootstrap connection: " + e.getMessage());
         }

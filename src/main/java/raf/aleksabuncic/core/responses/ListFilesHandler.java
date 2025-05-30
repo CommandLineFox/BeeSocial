@@ -41,9 +41,9 @@ public class ListFilesHandler extends ResponseHandler {
             List<String> files = Utils.listFilesInDirectory(uploadsPath);
             String content = String.join(",", files);
 
-            Message response = new Message("LIST_FILES_RESPONSE", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), content);
+            Message response = new Message("LIST_FILES_RESPONSE", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), content);
 
-            String senderId = runtime.hashString(message.senderIp() + ":" + message.senderPort());
+            String senderId = runtime.hashString(message.initiatorIp() + ":" + message.initiatorPort());
             runtime.forwardMessage(senderId, response);
         } finally {
             runtime.exitCriticalSection();

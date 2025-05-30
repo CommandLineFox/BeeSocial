@@ -28,7 +28,7 @@ public class PingCommand extends Command {
         String localIp = runtime.getNodeModel().getListenIp();
         int localPort = runtime.getNodeModel().getListenPort();
 
-        Message ping = new Message("PING", localIp, localPort, "");
+        Message ping = new Message("PING", localIp, localPort, localIp, localPort, "");
         runtime.forwardMessage(targetId, ping);
     }
 }

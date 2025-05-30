@@ -21,9 +21,9 @@ public class PingHandler extends ResponseHandler {
     public void handle(Message message) {
         //System.out.println("Received PING from Node " + message.senderIp() + ":" + message.senderPort());
 
-        Message pong = new Message("PONG", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), "");
+        Message pong = new Message("PONG", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), "");
 
-        String senderId = runtime.hashString(message.senderIp() + ":" + message.senderPort());
+        String senderId = runtime.hashString(message.initiatorIp() + ":" + message.initiatorPort());
         runtime.forwardMessage(senderId, pong);
 
         //System.out.println("Responded with PONG via forwardMessage to " + message.senderIp() + ":" + message.senderPort());

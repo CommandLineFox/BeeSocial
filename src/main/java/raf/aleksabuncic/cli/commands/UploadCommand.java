@@ -52,7 +52,7 @@ public class UploadCommand extends Command {
             String encoded = Base64.getEncoder().encodeToString(fileBytes);
             String content = fileName + "::" + encoded;
 
-            Message uploadMsg = new Message("UPLOAD_TRANSFER", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), content);
+            Message uploadMsg = new Message("UPLOAD_TRANSFER", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), content);
             runtime.forwardMessage(hash, uploadMsg);
             System.out.println("Uploading file '" + fileName + "' via Chord...");
 

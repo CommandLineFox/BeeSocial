@@ -27,7 +27,7 @@ public class RemoveFileCommand extends Command {
         String fileName = args[0];
         String hash = runtime.hashString(fileName);
 
-        Message deleteMsg = new Message("DELETE_FILE", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), fileName);
+        Message deleteMsg = new Message("DELETE_FILE", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), fileName);
 
         runtime.forwardMessage(hash, deleteMsg);
         System.out.println("Forwarded delete request for '" + fileName + "' to node responsible for hash " + hash);

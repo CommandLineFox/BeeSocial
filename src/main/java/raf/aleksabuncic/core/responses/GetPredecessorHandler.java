@@ -23,7 +23,7 @@ public class GetPredecessorHandler extends ResponseHandler {
         Peer predecessor = runtime.getPredecessor();
         String content = (predecessor == null) ? "null" : predecessor.ip() + ":" + predecessor.port();
 
-        Message response = new Message("PREDECESSOR_INFO", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), content);
+        Message response = new Message("PREDECESSOR_INFO", runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), content);
 
         String senderId = runtime.hashString(msg.senderIp() + ":" + msg.senderPort());
         runtime.forwardMessage(senderId, response);

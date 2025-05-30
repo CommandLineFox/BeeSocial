@@ -38,9 +38,11 @@ public class FailureDetector implements Runnable {
                 String myIp = runtime.getNodeModel().getListenIp();
                 int myPort = runtime.getNodeModel().getListenPort();
 
-                Message ping = new Message("PING", myIp, myPort, "");
-                Sender.sendMessage(target.ip(), target.port(), ping);
-                //System.out.println("Sent PING to successor " + target);
+                Message ping = new Message("PING", myIp, myPort, myIp, myPort, "");
+
+                String targetId = runtime.hashPeer(target);
+                runtime.forwardMessage(targetId, ping);
+                System.out.println("Sent PING to successor " + target);
 
                 lock.lock();
                 try {
@@ -70,7 +72,7 @@ public class FailureDetector implements Runnable {
 
                     for (Peer peer : runtime.getKnownPeers()) {
                         if (peer.port() == runtime.getNodeModel().getListenPort()) continue;
-                        Sender.sendFindSuccessor(peer, runtime.getNodeModel().getChordId(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort());
+                        Sender.sendFindSuccessor(peer, runtime.getNodeModel().getChordId(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort(), runtime.getNodeModel().getListenIp(), runtime.getNodeModel().getListenPort());
                         System.out.println("Trying to find replacement successor via peer: " + peer);
                         break;
                     }

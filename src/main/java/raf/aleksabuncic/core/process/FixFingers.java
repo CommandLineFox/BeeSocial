@@ -6,7 +6,7 @@ import raf.aleksabuncic.types.Peer;
 import java.math.BigInteger;
 
 /**
- * Handles the fix fingers process by periodically updating the finger table.
+ * Periodično ažurira finger tabelu koristeći asinhroni hop-by-hop FIND_SUCCESSOR.
  */
 public class FixFingers implements Runnable {
     private final NodeRuntime runtime;
@@ -20,39 +20,29 @@ public class FixFingers implements Runnable {
     public void run() {
         while (runtime.isRunning()) {
             try {
-                if (runtime.getSuccessor() == null || runtime.getSuccessorId() == null) {
-                    //System.out.println("FixFingers: Skipping, successor not yet known.");
+                Peer successor = runtime.getSuccessor();
+                String myId = runtime.getNodeModel().getChordId();
+
+                if (successor == null || runtime.getSuccessorId() == null) {
                     Thread.sleep(1000);
                     continue;
                 }
 
-                String myId = runtime.getNodeModel().getChordId();
+                if (runtime.getSuccessorId().equals(myId)) {
+                    Thread.sleep(5000);
+                    continue;
+                }
+
                 BigInteger myInt = new BigInteger(myId, 16);
 
-                for (int i = 0; i < m; i++) {
+                for (int i = 0; i < Math.min(5, m); i++) {
                     BigInteger offset = BigInteger.TWO.pow(i);
                     BigInteger target = myInt.add(offset).mod(BigInteger.TWO.pow(m));
                     String targetId = String.format("%040x", target);
 
-                    Peer finger = runtime.findSuccessor(targetId);
+                    runtime.findSuccessorAsync(targetId);
 
-                    if (finger == null) {
-                        //System.out.println("FixFingers: Could not find finger[" + i + "] (null)");
-                        continue;
-                    }
-
-                    if (runtime.getFingerTable().size() <= i) {
-                        runtime.getFingerTable().add(finger);
-                        //System.out.println("FixFingers: Added finger[" + i + "] → " + finger);
-                    } else {
-                        Peer current = runtime.getFingerTable().get(i);
-                        if (!current.equals(finger)) {
-                            runtime.getFingerTable().set(i, finger);
-                            //System.out.println("FixFingers: Updated finger[" + i + "] → " + finger);
-                        }
-                    }
-
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                 }
 
                 Thread.sleep(5000);

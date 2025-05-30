@@ -78,25 +78,25 @@ public class NodeRuntime {
      * Chord successor node
      */
     @Setter
-    private Peer successor;
+    private volatile Peer successor;
 
     /**
      * Chord ID of the current successor
      */
     @Setter
-    private String successorId;
+    private volatile String successorId;
 
     /**
      * Chord predecessor node
      */
     @Setter
-    private Peer predecessor;
+    private volatile Peer predecessor;
 
     /**
      * Chord ID of the current predecessor
      */
     @Setter
-    private String predecessorId;
+    private volatile String predecessorId;
 
     /**
      * Finger table for efficient O(log N) lookups.
@@ -114,7 +114,7 @@ public class NodeRuntime {
      * Current request number
      */
     @Setter
-    private int requestNumber = 0;
+    private volatile int requestNumber = 0;
 
     /**
      * Map of known requests
@@ -136,9 +136,6 @@ public class NodeRuntime {
      */
     public void start() {
         new Thread(new ConnectionHandler(this, nodeModel.getListenPort())).start();
-        new Thread(failureDetector).start();
-        new Thread(stabilizer).start();
-        new Thread(fixFingers).start();
 
         try {
             Thread.sleep(1000);
@@ -146,6 +143,15 @@ public class NodeRuntime {
         }
 
         registerWithBootstrap();
+    }
+
+    /**
+     * Starts all background threads for this node
+     */
+    private void startHelperThreads() {
+        new Thread(failureDetector).start();
+        new Thread(stabilizer).start();
+        new Thread(fixFingers).start();
     }
 
     /**
@@ -169,7 +175,7 @@ public class NodeRuntime {
     }
 
     /**
-     * Register with the bootstrap server and attempt to find successor in the ring
+     * Register with the bootstrap server and attempt to find a successor in the ring
      */
     public void registerWithBootstrap() {
         try {
@@ -179,7 +185,7 @@ public class NodeRuntime {
             String myIp = nodeModel.getListenIp();
             int myPort = nodeModel.getListenPort();
 
-            Message request = new Message("REGISTER_REQUEST", myIp, myPort, String.valueOf(myPort));
+            Message request = new Message("REGISTER_REQUEST", myIp, myPort, myIp, myPort, String.valueOf(myPort));
             Message response = Sender.sendMessageWithResponse(bootstrapIp, bootstrapPort, request);
 
             if (response != null && "REGISTER_RESPONSE".equals(response.type())) {
@@ -188,22 +194,14 @@ public class NodeRuntime {
                 System.out.println("[DEBUG] knownPeers after bootstrap = " + knownPeers);
 
                 for (Peer peer : knownPeers) {
-                    System.out.println("Requesting successor info from peer: " + peer);
-                    Sender.sendFindSuccessor(peer, nodeModel.getChordId(), myIp, myPort);
+                    Thread.sleep(1000);
+                    join(peer);
                     break;
                 }
-
-                if (successor == null) {
-                    this.successor = new Peer(myIp, myPort);
-                    this.successorId = nodeModel.getChordId();
-                    System.out.println("No peers found. Acting as own successor.");
-                }
-
             } else {
                 System.err.println("Did not receive valid response from bootstrap.");
                 shutdown();
             }
-
         } catch (Exception e) {
             System.err.println("Failed to register with bootstrap server: " + e.getMessage());
             shutdown();
@@ -212,33 +210,12 @@ public class NodeRuntime {
         if (knownPeers.isEmpty()) {
             this.token = new Token();
             System.out.println("This node is the first. Token initialized.");
-        }
-    }
-
-    /**
-     * Finds the successor of a given Chord ID in the ring.
-     *
-     * @param targetId Chord ID to resolve
-     * @return Peer that is responsible for the target ID
-     */
-    public Peer findSuccessor(String targetId) {
-        if (successor == null || successorId == null) {
-            System.err.println("[findSuccessor] No successor info. Returning self.");
-            return new Peer(nodeModel.getListenIp(), nodeModel.getListenPort());
+            this.successor = new Peer(nodeModel.getListenIp(), nodeModel.getListenPort());
+            this.successorId = nodeModel.getChordId();
+            System.out.println("First node → set self as successor.");
         }
 
-        String myId = nodeModel.getChordId();
-
-        System.out.println("Looking for successor of ID: " + targetId);
-        System.out.println("My ID: " + myId + ", Successor ID: " + successorId);
-
-        if (isBetween(myId, targetId, successorId)) {
-            return successor;
-        }
-
-        Peer nextHop = closestPrecedingFinger(targetId);
-
-        return Sender.sendFindSuccessorWithResponse(nextHop, targetId, nodeModel.getListenIp(), nodeModel.getListenPort());
+        startHelperThreads();
     }
 
     /**
@@ -269,7 +246,7 @@ public class NodeRuntime {
             String localIp = nodeModel.getListenIp();
             int localPort = nodeModel.getListenPort();
 
-            Message notifyMsg = new Message("NOTIFY", localIp, localPort, nodeModel.getChordId());
+            Message notifyMsg = new Message("NOTIFY", localIp, localPort, localIp, localPort, nodeModel.getChordId());
             Sender.sendMessage(successor.ip(), successor.port(), notifyMsg);
         }
     }
@@ -359,7 +336,7 @@ public class NodeRuntime {
 
                 String content = fileName + "::" + encoded;
 
-                Message transfer = new Message("UPLOAD_TRANSFER", nodeModel.getListenIp(), nodeModel.getListenPort(), content);
+                Message transfer = new Message("UPLOAD_TRANSFER", nodeModel.getListenIp(), nodeModel.getListenPort(), nodeModel.getListenIp(), nodeModel.getListenPort(), content);
 
                 Sender.sendMessage(target.ip(), target.port(), transfer);
                 System.out.println("Transferred file: " + fileName + " to " + target);
@@ -381,12 +358,12 @@ public class NodeRuntime {
         System.out.println("Leaving Chord ring...");
 
         if (predecessor != null && successor != null && !successor.equals(predecessor)) {
-            Message updateSucc = new Message("UPDATE_SUCCESSOR", nodeModel.getListenIp(), nodeModel.getListenPort(), successor.ip() + ":" + successor.port());
+            Message updateSucc = new Message("UPDATE_SUCCESSOR", nodeModel.getListenIp(), nodeModel.getListenPort(), nodeModel.getListenIp(), nodeModel.getListenPort(), successor.ip() + ":" + successor.port());
             Sender.sendMessage(predecessor.ip(), predecessor.port(), updateSucc);
         }
 
         if (successor != null && predecessor != null && !successor.equals(predecessor)) {
-            Message updatePred = new Message("UPDATE_PREDECESSOR", nodeModel.getListenIp(), nodeModel.getListenPort(), predecessor.ip() + ":" + predecessor.port());
+            Message updatePred = new Message("UPDATE_PREDECESSOR", nodeModel.getListenIp(), nodeModel.getListenPort(), nodeModel.getListenIp(), nodeModel.getListenPort(), predecessor.ip() + ":" + predecessor.port());
             Sender.sendMessage(successor.ip(), successor.port(), updatePred);
         }
 
@@ -441,18 +418,40 @@ public class NodeRuntime {
      * @param msg      Message to send
      */
     public void forwardMessage(String targetId, Message msg) {
-        Peer destination = findSuccessor(targetId);
-        if (destination == null) {
-            System.err.println("Cannot route message, no destination found for ID: " + targetId);
-            return;
-        }
+        String myId = nodeModel.getChordId();
 
-        if (destination.port() == nodeModel.getListenPort()) {
+        if (targetId.equals(myId)) {
             handleMessage(msg);
             return;
         }
 
-        Sender.sendMessage(destination.ip(), destination.port(), msg);
+        if (successor == null || successorId == null) {
+            System.err.println("Cannot route message, no successor info for target: " + targetId);
+            return;
+        }
+
+        if (isBetween(myId, targetId, successorId)) {
+            if (!successorId.equals(myId)) {
+                Sender.sendMessage(successor.ip(), successor.port(), msg);
+            } else {
+                handleMessage(msg);
+            }
+            return;
+        }
+
+        Peer nextHop = closestPrecedingFinger(targetId);
+        if (nextHop == null) {
+            System.err.println("forwardMessage: No next hop found, dropping message to " + targetId);
+            return;
+        }
+
+        String nextHopId = hashPeer(nextHop);
+        if (nextHopId.equals(myId)) {
+            handleMessage(msg);
+            return;
+        }
+
+        Sender.sendMessage(nextHop.ip(), nextHop.port(), msg);
     }
 
     /**
@@ -478,7 +477,7 @@ public class NodeRuntime {
             for (Peer peer : knownPeers) {
                 if (peer.port() == myId) continue;
 
-                Message request = new Message("TOKEN_REQUEST", nodeModel.getListenIp(), myId, String.valueOf(requestNumber));
+                Message request = new Message("TOKEN_REQUEST", nodeModel.getListenIp(), myId, nodeModel.getListenIp(), nodeModel.getListenPort(), String.valueOf(requestNumber));
                 String targetId = hashPeer(peer);
                 forwardMessage(targetId, request);
             }
@@ -512,7 +511,6 @@ public class NodeRuntime {
             }
         }
 
-
         if (!token.queue.isEmpty()) {
             Integer next = token.queue.poll();
 
@@ -523,7 +521,7 @@ public class NodeRuntime {
 
             if (nextPeer != null) {
                 String tokenString = Utils.serializeToken(token);
-                Message tokenMsg = new Message("TOKEN", nodeModel.getListenIp(), myId, tokenString);
+                Message tokenMsg = new Message("TOKEN", nodeModel.getListenIp(), myId, nodeModel.getListenIp(), nodeModel.getListenPort(), tokenString);
                 forwardMessage(hashPeer(nextPeer), tokenMsg);
 
                 String targetId = hashPeer(nextPeer);
@@ -535,5 +533,53 @@ public class NodeRuntime {
         }
 
         System.out.println("Exited critical section.");
+    }
+
+    /**
+     * Joins the Chord ring using one known peer.
+     *
+     * @param contact The peer to use as an entry point into the Chord ring.
+     */
+    public void join(Peer contact) {
+        System.out.println("[JOIN] Attempting to join via contact peer: " + contact);
+
+        String initiatorId = nodeModel.getListenIp() + ":" + nodeModel.getListenPort();
+        String content = nodeModel.getChordId() + "::" + initiatorId;
+
+        Message joinRequest = new Message("FIND_SUCCESSOR", nodeModel.getListenIp(), nodeModel.getListenPort(), nodeModel.getListenIp(), nodeModel.getListenPort(), content);
+        Sender.sendMessage(contact.ip(), contact.port(), joinRequest);
+    }
+
+    /**
+     * Handles asynchronous findSuccessor logic through recursive messaging.
+     * This is called by the FIND_SUCCESSOR handler.
+     *
+     * @param targetId Chord ID to resolve
+     */
+    public void findSuccessorAsync(String targetId) {
+        if (successor == null || successorId == null) {
+            System.err.println("[findSuccessorAsync] No successor info.");
+            return;
+        }
+
+        String myId = nodeModel.getChordId();
+
+        if (isBetween(myId, targetId, successorId)) {
+            String content = successor.ip() + ":" + successor.port();
+            Message response = new Message("FIND_SUCCESSOR_RESPONSE", nodeModel.getListenIp(), nodeModel.getListenPort(), nodeModel.getListenIp(), nodeModel.getListenPort(), content);
+
+            forwardMessage(targetId, response);
+            return;
+        }
+
+        Peer nextHop = closestPrecedingFinger(targetId);
+        if (nextHop == null) {
+            System.err.println("[findSuccessorAsync] No next hop for targetId: " + targetId);
+            return;
+        }
+        String initiatorId = nodeModel.getListenIp() + ":" + nodeModel.getListenPort();
+        String content = targetId + "::" + initiatorId;
+        Message request = new Message("FIND_SUCCESSOR", nodeModel.getListenIp(), nodeModel.getListenPort(), nodeModel.getListenIp(), nodeModel.getListenPort(), content);
+        forwardMessage(hashPeer(nextHop), request);
     }
 }

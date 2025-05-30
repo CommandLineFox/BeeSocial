@@ -44,7 +44,7 @@ public class ListFilesCommand extends Command {
         String localIp = runtime.getNodeModel().getListenIp();
         int localPort = runtime.getNodeModel().getListenPort();
 
-        Message msg = new Message("LIST_FILES", localIp, localPort, "");
+        Message msg = new Message("LIST_FILES", localIp, localPort, localIp, localPort, "");
         runtime.forwardMessage(targetId, msg);
     }
 }

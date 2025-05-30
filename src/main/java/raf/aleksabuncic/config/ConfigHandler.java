@@ -6,43 +6,11 @@ import raf.aleksabuncic.types.BootstrapConfig;
 import raf.aleksabuncic.types.Node;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Handles loading of configuration files.
  */
 public class ConfigHandler {
-    /**
-     * Loads all nodes from the given resource path.
-     *
-     * @param resourcePath Path to the config file.
-     * @return List of nodes.
-     */
-    public static List<Node> loadAllNodes(String resourcePath) {
-        List<Node> nodes = new ArrayList<>();
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            InputStream is = ConfigHandler.class.getClassLoader().getResourceAsStream(resourcePath);
-
-            if (is == null) {
-                throw new IllegalArgumentException("Couldn't find config file: " + resourcePath);
-            }
-
-            JsonNode root = mapper.readTree(is);
-            for (JsonNode nodeEntry : root.get("nodeList")) {
-                Node node = loadEntry(nodeEntry);
-                nodes.add(node);
-            }
-
-        } catch (Exception e) {
-            System.out.println("Error when loading all nodes");
-        }
-
-        return nodes;
-    }
-
     /**
      * Loads a node from the given resource path.
      *
